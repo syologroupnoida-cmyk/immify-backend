@@ -1,0 +1,312 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  SUPER_ADMIN
+  ADMIN
+  VENDOR
+  CLIENT
+}
+
+enum AuthProvider {
+  LOCAL
+  GOOGLE
+  HYBRID
+}
+
+enum EmailOtpPurpose {
+  EMAIL_VERIFICATION
+  PASSWORD_RESET
+  LOGIN_2FA
+}
+
+enum VendorType {
+  TRAVEL_AGENT
+  PROPERTY_OWNER
+}
+
+enum KycStatus {
+  PENDING
+  SUBMITTED
+  APPROVED
+  REJECTED
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  EXPIRED
+  CANCELLED
+}
+
+enum LeadType {
+  GLOBAL
+  DIRECT
+}
+
+enum LeadStatus {
+  PENDING_ADMIN
+  APPROVED
+  SOLD_OUT
+  EXPIRED
+  REJECTED
+}
+
+enum WalletTransactionType {
+  CREDIT
+  DEBIT
+  REFUND
+}
+
+enum WalletTransactionStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
+
+model User {
+  id              String                @id @default(cuid())
+  email           String                @unique
+  phone           String?               @unique
+  password        String?
+  googleId        String?               @unique
+  avatarUrl       String?
+  authProvider    AuthProvider          @default(LOCAL)
+  role            UserRole              @default(CLIENT)
+  firstName       String?
+  lastName        String?
+  emailVerifiedAt DateTime?
+  isActive        Boolean               @default(true)
+  createdAt       DateTime              @default(now())
+  updatedAt       DateTime              @updatedAt
+  vendorProfile   VendorProfile?
+  clientProfile   ClientProfile?
+  adminProfile    AdminProfile?
+  wallets         Wallet[]
+  walletTxns      WalletTransaction[]
+  refreshTokens   RefreshToken[]
+  emailOtps       EmailOtp[]
+
+  @@index([role, isActive])
+  @@index([emailVerifiedAt])
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String
+  isRevoked Boolean  @default(false)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("refresh_tokens")
+}
+
+model EmailOtp {
+  id         String          @id @default(uuid())
+  userId     String
+  codeHash   String
+  purpose    EmailOtpPurpose
+  attempts   Int             @default(0)
+  consumedAt DateTime?
+  expiresAt  DateTime
+  createdAt  DateTime        @default(now())
+  user       User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, purpose])
+  @@map("email_otps")
+}
+
+model VendorProfile {
+  id               String               @id @default(cuid())
+  userId           String               @unique
+  companyName      String?
+  phone            String?
+  website          String?
+  vendorType       VendorType           @default(TRAVEL_AGENT)
+  kycStatus        KycStatus            @default(PENDING)
+  isPremium        Boolean              @default(false)
+  createdAt        DateTime             @default(now())
+  updatedAt        DateTime             @updatedAt
+  user             User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subscriptions    VendorSubscription[]
+  serviceListings  ServiceListing[]
+  directLeads      Lead[]               @relation("LeadTargetVendor")
+  unlockedLeads    UnlockedLead[]
+
+  @@index([isPremium])
+  @@index([vendorType])
+}
+
+model ClientProfile {
+  id               String   @id @default(cuid())
+  userId           String   @unique
+  companyName      String?
+  preferredContact String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  leads            Lead[]
+
+  @@index([createdAt])
+}
+
+model AdminProfile {
+  id            String            @id @default(cuid())
+  userId        String            @unique
+  fullName      String?
+  permissions   Json?
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+  user          User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  categories    ServiceCategory[]
+
+  @@index([createdAt])
+}
+
+model Wallet {
+  id              String               @id @default(cuid())
+  userId          String               @unique
+  balanceCredits  Int                  @default(0)
+  currency        String               @default("USD")
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+  user            User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions    WalletTransaction[]
+
+  @@index([balanceCredits])
+}
+
+model WalletTransaction {
+  id          String                  @id @default(cuid())
+  walletId    String
+  userId      String
+  leadId      String?
+  type        WalletTransactionType
+  amount      Int
+  status      WalletTransactionStatus @default(COMPLETED)
+  description String?
+  reference   String?
+  createdAt   DateTime                @default(now())
+  wallet      Wallet                  @relation(fields: [walletId], references: [id], onDelete: Cascade)
+  user        User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lead        Lead?                   @relation(fields: [leadId], references: [id], onDelete: SetNull)
+
+  @@index([userId, createdAt])
+  @@index([walletId, createdAt])
+  @@index([leadId, createdAt])
+}
+
+model SubscriptionPlan {
+  id                     String               @id @default(cuid())
+  code                   String               @unique
+  name                   String
+  monthlyPrice           Decimal
+  serviceListingLimit    Int
+  categoryAccess         Json
+  allowJobPortal         Boolean              @default(false)
+  jobPostLimit           Int                  @default(0)
+  directLeadPriceInCredits Int                 @default(0)
+  isActive               Boolean              @default(true)
+  createdAt              DateTime             @default(now())
+  updatedAt              DateTime             @updatedAt
+  vendorSubscriptions    VendorSubscription[]
+
+  @@index([isActive, code])
+}
+
+model VendorSubscription {
+  id              String             @id @default(cuid())
+  vendorProfileId String
+  planId          String
+  status          SubscriptionStatus @default(ACTIVE)
+  startedAt       DateTime           @default(now())
+  expiresAt       DateTime
+  autoRenew       Boolean            @default(true)
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+  vendorProfile   VendorProfile      @relation(fields: [vendorProfileId], references: [id], onDelete: Cascade)
+  plan            SubscriptionPlan   @relation(fields: [planId], references: [id], onDelete: Restrict)
+
+  @@index([vendorProfileId, status, expiresAt])
+  @@index([status, expiresAt])
+}
+
+model ServiceCategory {
+  id                String           @id @default(cuid())
+  name              String           @unique
+  slug              String           @unique
+  description       String?
+  formSchema        Json
+  isActive          Boolean          @default(true)
+  createdByAdminId  String?
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+  createdByAdmin    AdminProfile?    @relation(fields: [createdByAdminId], references: [id], onDelete: SetNull)
+  serviceListings   ServiceListing[]
+
+  @@index([isActive, name])
+}
+
+model ServiceListing {
+  id              String           @id @default(cuid())
+  vendorProfileId String
+  categoryId      String
+  title           String
+  description     String?
+  dynamicData     Json
+  isActive        Boolean          @default(true)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  vendorProfile   VendorProfile    @relation(fields: [vendorProfileId], references: [id], onDelete: Cascade)
+  category        ServiceCategory  @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+
+  @@index([vendorProfileId, isActive])
+  @@index([categoryId, isActive])
+  @@index([title])
+}
+
+model Lead {
+  id              String           @id @default(cuid())
+  type            LeadType         @default(GLOBAL)
+  clientProfileId String?
+  targetVendorId  String?
+  status          LeadStatus       @default(PENDING_ADMIN)
+  priceInCredits  Int?
+  purchaseLimit   Int              @default(5)
+  purchasedCount  Int              @default(0)
+  metadata        Json?
+  expiresAt       DateTime?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  clientProfile   ClientProfile?   @relation(fields: [clientProfileId], references: [id], onDelete: SetNull)
+  targetVendor    VendorProfile?   @relation("LeadTargetVendor", fields: [targetVendorId], references: [id], onDelete: SetNull)
+  unlockedLeads   UnlockedLead[]
+  transactions    WalletTransaction[]
+
+  @@index([status, expiresAt])
+  @@index([type, status])
+  @@index([targetVendorId, status])
+  @@index([clientProfileId, createdAt])
+}
+
+model UnlockedLead {
+  id              String         @id @default(cuid())
+  leadId          String
+  vendorProfileId String
+  purchasedAt     DateTime       @default(now())
+  lead            Lead           @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  vendorProfile   VendorProfile  @relation(fields: [vendorProfileId], references: [id], onDelete: Cascade)
+
+  @@unique([leadId, vendorProfileId])
+  @@index([vendorProfileId, purchasedAt])
+}

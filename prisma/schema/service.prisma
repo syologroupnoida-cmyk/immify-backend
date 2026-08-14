@@ -1,0 +1,16 @@
+// A child service under a ServiceCategory (e.g. "Express Entry" under
+// "Immigration Services"). Optional — a category can have zero services.
+model Service {
+  id          String   @id @default(uuid())
+  categoryId  String
+  name        String
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  category ServiceCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@unique([categoryId, name])
+  @@map("services")
+}

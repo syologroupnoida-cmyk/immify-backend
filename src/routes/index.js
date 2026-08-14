@@ -1,20 +1,18 @@
-const express = require('express');
-const authRoutes = require('./auth.routes');
-const subscriptionRoutes = require('./subscription.routes');
-const serviceRoutes = require('./service.routes');
-const leadRoutes = require('./lead.routes');
-const adminRoutes = require('./admin.routes');
+import { Router } from 'express';
 
-const router = express.Router();
+import commonRoutes from './common/index.js';
+import superAdminRoutes from './super-admin/index.js';
+import adminRoutes from './admin/index.js';
+import vendorRoutes from './vendor/index.js';
 
-router.get('/', (_req, res) => {
-  res.json({ ok: true, message: 'Emmify API' });
-});
+const router = Router();
 
-router.use('/auth', authRoutes);
-router.use('/subscriptions', subscriptionRoutes);
-router.use('/services', serviceRoutes);
-router.use('/leads', leadRoutes);
+// Public + shared endpoints (health, auth — used by every role)
+router.use('/', commonRoutes);
+
+// Panel-scoped routers (role guards applied inside each)
+router.use('/super-admin', superAdminRoutes);
 router.use('/admin', adminRoutes);
+router.use('/vendor', vendorRoutes);
 
-module.exports = router;
+export default router;

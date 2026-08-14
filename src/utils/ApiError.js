@@ -1,12 +1,14 @@
-class ApiError extends Error {
+export class ApiError extends Error {
   constructor(statusCode, message, details = null) {
     super(message);
+    this.name = 'ApiError';
     this.statusCode = statusCode;
     this.details = details;
-    this.name = 'ApiError';
+    this.isOperational = true;
+    Error.captureStackTrace?.(this, this.constructor);
   }
 
-  static badRequest(message, details = null) {
+  static badRequest(message = 'Bad request', details = null) {
     return new ApiError(400, message, details);
   }
 
@@ -18,7 +20,7 @@ class ApiError extends Error {
     return new ApiError(403, message, details);
   }
 
-  static notFound(message = 'Not found', details = null) {
+  static notFound(message = 'Resource not found', details = null) {
     return new ApiError(404, message, details);
   }
 
@@ -30,5 +32,3 @@ class ApiError extends Error {
     return new ApiError(500, message, details);
   }
 }
-
-module.exports = ApiError;

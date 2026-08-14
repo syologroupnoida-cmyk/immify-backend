@@ -1,91 +1,184 @@
-const { env } = require('../../config/env');
-const { hashPassword, comparePassword } = require('../../utils/password');
-const { generateOtp, hashOtp, otpExpiry } = require('../../utils/otp');
-const { signPasswordResetToken, verifyPasswordResetToken } = require('../../utils/jwt');
-const { findLatestOtp, createEmailOtp, updateEmailOtp } = require('../../repositories/emailOtp.repository');
-const { findUserByEmail, findUserById, updateUser } = require('../../repositories/user.repository');
-const { revokeAllRefreshTokensForUser } = require('../../repositories/refreshToken.repository');
-const { sendOtpEmail, sendPasswordChangedEmail } = require('./_helpers');
-const ApiError = require('../../utils/ApiError');
+import jwt from 'jsonwebtoken';
+import { hashPassword } from '../../utils/password.js';
+import { hashOtp } from '../../utils/otp.js';
+import { ApiError } from '../../utils/ApiError.js';
+import { env } from '../../config/env.js';
+import { signPasswordResetToken, verifyPasswordResetToken } from '../../utils/jwt.js';
+import * as userRepo from '../../repositories/user.repository.js';
+import * as refreshRepo from '../../repositories/refreshToken.repository.js';
+import * as otpRepo from '../../repositories/emailOtp.repository.js';
+import * as kycRepo from '../../repositories/vendorKyc.repository.js';
+import { sendPasswordChangedNotice } from '../mail/index.js';
+import { issueAndSendPasswordResetOtp, buildOtpMetadata } from './_helpers.js';
 
-const GENERIC_MESSAGE = 'If an account exists for that email, a code has been sent.';
+/**
+ * isActive=false has two distinct meanings:
+ *   1. Vendor just submitted KYC and is waiting for admin review.
+ *      → harmless to let them reset their password; admin still gates login.
+ *   2. Account permanently disabled / banned by admin.
+ *      → block everything.
+ *
+ * This helper returns `true` only for case (1). Used to selectively allow
+ * password reset for vendors-under-review while keeping deactivated accounts
+ * fully locked.
+ */
+const isVendorAwaitingReview = async (user) => {
+  if (!user || user.role !== 'VENDOR') return false;
+  const profile = await kycRepo.findVendorProfile(user.id);
+  return profile?.kycStatus === 'SUBMITTED';
+};
 
-const forgotPassword = async (res, { email }) => {
-  const user = await findUserByEmail(email);
-  if (!user) return { message: GENERIC_MESSAGE };
+export const requestPasswordReset = async ({ email }) => {
+  const user = await userRepo.findUserByEmail(email);
 
-  const lastOtp = await findLatestOtp(user.id, 'PASSWORD_RESET');
-  if (lastOtp) {
-    const secondsSinceLast = (Date.now() - lastOtp.createdAt.getTime()) / 1000;
-    if (secondsSinceLast < env.OTP_RESEND_COOLDOWN_SECONDS) {
-      const retryAfterSeconds = Math.ceil(env.OTP_RESEND_COOLDOWN_SECONDS - secondsSinceLast);
-      res.setHeader('Retry-After', retryAfterSeconds);
-      throw new ApiError(429, 'Please wait before requesting another code.', { code: 'RESEND_COOLDOWN', retryAfterSeconds });
+  // Generic response — never reveal whether the email exists, the user has a
+  // password (vs. Google-only), or the account is permanently deactivated.
+  // OTP metadata is included even on the generic branch so the response
+  // shape is identical (anti-enumeration).
+  const messageText =
+    'If an account exists for that email, a password reset code has been sent.';
+
+  if (!user || !user.password) {
+    return { message: messageText, otp: buildOtpMetadata() };
+  }
+
+  // isActive=false: allow ONLY if the vendor is in admin-review limbo.
+  // Permanently deactivated accounts still get the silent generic response.
+  if (!user.isActive) {
+    const underReview = await isVendorAwaitingReview(user);
+    if (!underReview) {
+      return { message: messageText, otp: buildOtpMetadata() };
     }
   }
 
-  const otpCode = generateOtp(env.OTP_LENGTH);
-  await createEmailOtp({ userId: user.id, codeHash: hashOtp(otpCode), purpose: 'PASSWORD_RESET', expiresAt: otpExpiry(env.OTP_TTL_MINUTES) });
-  await sendOtpEmail(user.email, otpCode, 'PASSWORD_RESET');
+  const cooldownMs = env.OTP_RESEND_COOLDOWN_SECONDS * 1000;
+  const active = await otpRepo.findLatestActiveOtp({
+    userId: user.id,
+    purpose: 'PASSWORD_RESET',
+  });
 
-  return { message: GENERIC_MESSAGE };
+  if (active) {
+    const sinceCreated = Date.now() - new Date(active.createdAt).getTime();
+    if (sinceCreated < cooldownMs) {
+      const retryAfter = Math.ceil((cooldownMs - sinceCreated) / 1000);
+      throw new ApiError(
+        429,
+        `Please wait ${retryAfter}s before requesting another reset code.`,
+        { code: 'OTP_RESEND_COOLDOWN', retryAfter },
+      );
+    }
+  }
+
+  const otp = await issueAndSendPasswordResetOtp(user);
+  return { message: messageText, otp };
 };
 
-const verifyResetOtp = async ({ email, code }) => {
-  const user = await findUserByEmail(email);
-  if (!user) throw ApiError.badRequest('Invalid or expired code.');
-
-  const otp = await findLatestOtp(user.id, 'PASSWORD_RESET');
-  if (!otp || otp.consumedAt || otp.expiresAt < new Date()) throw ApiError.badRequest('Invalid or expired code.');
-
-  if (otp.attempts >= env.OTP_MAX_ATTEMPTS) {
-    await updateEmailOtp(otp.id, { consumedAt: new Date() });
-    throw ApiError.forbidden('Too many attempts. Please request a new code.');
+/**
+ * Step 2 of the 3-step reset flow — verify-only.
+ *
+ * Validates the OTP WITHOUT consuming it. Returns success if the OTP matches
+ * so the frontend can transition the user to the "set new password" screen
+ * with confidence. The OTP is still alive — actual consumption happens in
+ * resetPassword() when the user submits the new password.
+ *
+ * Failed attempts still increment the attempts counter (rate limiting), and
+ * an exhausted OTP is burned to force a re-request.
+ */
+export const verifyPasswordResetOtp = async ({ email, otp }) => {
+  const user = await userRepo.findUserByEmail(email);
+  if (!user) {
+    throw ApiError.unauthorized('Invalid email or reset code.');
+  }
+  // Allow vendors awaiting admin review to verify the OTP. Truly deactivated
+  // accounts still get blocked.
+  if (!user.isActive && !(await isVendorAwaitingReview(user))) {
+    throw ApiError.forbidden('This account has been deactivated.');
   }
 
-  if (hashOtp(code) !== otp.codeHash) {
-    await updateEmailOtp(otp.id, { attempts: otp.attempts + 1 });
-    throw ApiError.badRequest('Invalid or expired code.');
+  const active = await otpRepo.findLatestActiveOtp({
+    userId: user.id,
+    purpose: 'PASSWORD_RESET',
+  });
+
+  if (!active) {
+    throw ApiError.unauthorized('Reset code has expired. Please request a new one.');
   }
 
-  await updateEmailOtp(otp.id, { consumedAt: new Date() });
+  if (active.attempts >= env.OTP_MAX_ATTEMPTS) {
+    await otpRepo.consumeOtp(active.id);
+    throw ApiError.unauthorized(
+      'Too many incorrect attempts. Please request a new reset code.',
+    );
+  }
+
+  if (hashOtp(otp) !== active.codeHash) {
+    await otpRepo.incrementOtpAttempts(active.id);
+    throw ApiError.unauthorized('Invalid reset code.');
+  }
+
+  // OTP correct — burn it now and issue a short-lived reset token. The
+  // frontend stores the token (NOT the OTP) and uses it on /password/reset.
+  // Token has its own 10-minute clock — a slow user on the password screen
+  // can't be tripped up by the OTP's own expiry.
+  await otpRepo.consumeOtp(active.id);
   const resetToken = signPasswordResetToken(user.id);
-
-  return { resetToken };
+  return {
+    otpVerified: true,
+    resetToken,
+    tokenExpiresAt: new Date(Date.now() + 10 * 60 * 1000),
+  };
 };
 
-const resetPassword = async ({ resetToken, newPassword }) => {
+/**
+ * Step 3 of the 3-step reset flow — set the new password.
+ *
+ * Takes the resetToken issued at step 2 (NOT the OTP). The token carries the
+ * user identity (sub) and a purpose claim. We verify the signature + expiry,
+ * extract the user, and update the password.
+ */
+export const resetPassword = async ({ resetToken, newPassword }) => {
   let payload;
   try {
     payload = verifyPasswordResetToken(resetToken);
   } catch (error) {
-    throw ApiError.unauthorized('Invalid or expired reset token.');
+    if (error instanceof jwt.TokenExpiredError) {
+      throw new ApiError(401, 'Reset session expired. Please request a new code.', {
+        code: 'RESET_TOKEN_EXPIRED',
+      });
+    }
+    throw new ApiError(401, 'Invalid reset session. Please request a new code.', {
+      code: 'RESET_TOKEN_INVALID',
+    });
   }
-  if (payload.purpose !== 'PASSWORD_RESET') throw ApiError.unauthorized('Invalid reset token.');
 
-  const user = await findUserById(payload.sub);
-  if (!user) throw ApiError.unauthorized('Invalid reset token.');
+  const user = await userRepo.findUserById(payload.sub);
+  if (!user) {
+    throw ApiError.unauthorized('Invalid reset session.');
+  }
+  // Vendors awaiting admin review may also set a new password — they still
+  // can't log in until admin approves.
+  if (!user.isActive && !(await isVendorAwaitingReview(user))) {
+    throw ApiError.forbidden('This account has been deactivated.');
+  }
 
-  const passwordHash = await hashPassword(newPassword);
-  await updateUser(user.id, { password: passwordHash });
-  await revokeAllRefreshTokensForUser(user.id);
-  sendPasswordChangedEmail(user.email);
+  // Update password.
+  const newPasswordHash = await hashPassword(newPassword);
+  await userRepo.updateUserPassword(user.id, newPasswordHash);
 
-  return { message: 'Password reset successful' };
+  // Kick out every existing session — if the attacker still holds a refresh
+  // token, they're now locked out.
+  await refreshRepo.revokeAllRefreshTokensForUser(user.id).catch((err) => {
+    console.error('[auth] Failed to revoke refresh tokens after password reset:', err?.message);
+  });
+
+  // Fire-and-forget confirmation email.
+  sendPasswordChangedNotice({
+    to: user.email,
+    firstName: user.firstName,
+    when: new Date(),
+  }).catch((err) =>
+    console.error('[auth] Failed to send password-changed notice:', err?.message),
+  );
+
+  return { passwordReset: true };
 };
-
-const changePassword = async (userId, { currentPassword, newPassword }) => {
-  const user = await findUserById(userId);
-  if (!user) throw ApiError.notFound('User not found');
-
-  const matches = await comparePassword(currentPassword, user.password);
-  if (!matches) throw ApiError.unauthorized('Current password is incorrect.');
-
-  const passwordHash = await hashPassword(newPassword);
-  await updateUser(user.id, { password: passwordHash });
-  sendPasswordChangedEmail(user.email);
-
-  return { message: 'Password changed successfully' };
-};
-
-module.exports = { forgotPassword, verifyResetOtp, resetPassword, changePassword };

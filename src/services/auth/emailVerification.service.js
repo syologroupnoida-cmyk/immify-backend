@@ -1,56 +1,82 @@
-const { env } = require('../../config/env');
-const { hashOtp, generateOtp, otpExpiry } = require('../../utils/otp');
-const { findLatestOtp, updateEmailOtp, createEmailOtp } = require('../../repositories/emailOtp.repository');
-const { findUserByEmail, updateUser } = require('../../repositories/user.repository');
-const { sendOtpEmail } = require('./_helpers');
-const ApiError = require('../../utils/ApiError');
+import { hashOtp } from '../../utils/otp.js';
+import { ApiError } from '../../utils/ApiError.js';
+import { env } from '../../config/env.js';
+import * as userRepo from '../../repositories/user.repository.js';
+import * as otpRepo from '../../repositories/emailOtp.repository.js';
+import {
+  sanitizeUser,
+  issueAndSendVerificationOtp,
+  buildOtpMetadata,
+} from './_helpers.js';
 
-const GENERIC_MESSAGE = 'If an account exists for that email, a code has been sent.';
+export const verifyEmailWithOtp = async ({ email, otp }) => {
+  const user = await userRepo.findUserByEmail(email);
+  if (!user) {
+    throw ApiError.unauthorized('Invalid email or code.');
+  }
+  if (user.emailVerifiedAt) {
+    return { user: sanitizeUser(user), alreadyVerified: true };
+  }
 
-const resendOtp = async (res, { email }) => {
-  const user = await findUserByEmail(email);
-  if (!user || user.emailVerifiedAt) return { message: GENERIC_MESSAGE };
+  const active = await otpRepo.findLatestActiveOtp({
+    userId: user.id,
+    purpose: 'EMAIL_VERIFICATION',
+  });
 
-  const lastOtp = await findLatestOtp(user.id, 'EMAIL_VERIFICATION');
-  if (lastOtp) {
-    const secondsSinceLast = (Date.now() - lastOtp.createdAt.getTime()) / 1000;
-    if (secondsSinceLast < env.OTP_RESEND_COOLDOWN_SECONDS) {
-      const retryAfterSeconds = Math.ceil(env.OTP_RESEND_COOLDOWN_SECONDS - secondsSinceLast);
-      res.setHeader('Retry-After', retryAfterSeconds);
-      throw new ApiError(429, 'Please wait before requesting another code.', { code: 'RESEND_COOLDOWN', retryAfterSeconds });
+  if (!active) {
+    throw ApiError.unauthorized('Verification code has expired. Please request a new one.');
+  }
+
+  if (active.attempts >= env.OTP_MAX_ATTEMPTS) {
+    // Burn the OTP so the user is forced to request a fresh one.
+    await otpRepo.consumeOtp(active.id);
+    throw ApiError.unauthorized(
+      'Too many incorrect attempts. Please request a new verification code.',
+    );
+  }
+
+  if (hashOtp(otp) !== active.codeHash) {
+    await otpRepo.incrementOtpAttempts(active.id);
+    throw ApiError.unauthorized('Invalid verification code.');
+  }
+
+  await otpRepo.consumeOtp(active.id);
+  const updated = await userRepo.markEmailVerified(user.id);
+
+  return { user: sanitizeUser(updated), alreadyVerified: false };
+};
+
+export const resendVerificationOtp = async ({ email }) => {
+  const user = await userRepo.findUserByEmail(email);
+
+  // Same-shape response regardless of existence to avoid email enumeration.
+  // OTP metadata is included in both branches so the response structure is
+  // identical for valid and invalid emails.
+  const messageText =
+    'If an account exists for that email, a verification code has been sent.';
+
+  if (!user || user.emailVerifiedAt || !user.isActive) {
+    return { message: messageText, otp: buildOtpMetadata() };
+  }
+
+  const cooldownMs = env.OTP_RESEND_COOLDOWN_SECONDS * 1000;
+  const active = await otpRepo.findLatestActiveOtp({
+    userId: user.id,
+    purpose: 'EMAIL_VERIFICATION',
+  });
+
+  if (active) {
+    const sinceCreated = Date.now() - new Date(active.createdAt).getTime();
+    if (sinceCreated < cooldownMs) {
+      const retryAfter = Math.ceil((cooldownMs - sinceCreated) / 1000);
+      throw new ApiError(
+        429,
+        `Please wait ${retryAfter}s before requesting another code.`,
+        { code: 'OTP_RESEND_COOLDOWN', retryAfter },
+      );
     }
   }
 
-  const otpCode = generateOtp(env.OTP_LENGTH);
-  await createEmailOtp({ userId: user.id, codeHash: hashOtp(otpCode), purpose: 'EMAIL_VERIFICATION', expiresAt: otpExpiry(env.OTP_TTL_MINUTES) });
-  await sendOtpEmail(user.email, otpCode, 'EMAIL_VERIFICATION');
-
-  return { message: GENERIC_MESSAGE };
+  const otp = await issueAndSendVerificationOtp(user);
+  return { message: messageText, otp };
 };
-
-const verifyEmail = async ({ email, code }) => {
-  const user = await findUserByEmail(email);
-  if (!user) throw ApiError.notFound('User not found');
-
-  const otp = await findLatestOtp(user.id, 'EMAIL_VERIFICATION');
-  if (!otp || otp.consumedAt) throw ApiError.badRequest('No verification OTP found. Please request a new code.');
-  if (otp.expiresAt < new Date()) throw ApiError.badRequest('This code has expired. Please request a new code.');
-
-  if (otp.attempts >= env.OTP_MAX_ATTEMPTS) {
-    await updateEmailOtp(otp.id, { consumedAt: new Date() });
-    throw ApiError.forbidden('Too many attempts. Please request a new code.');
-  }
-
-  const hashedInput = hashOtp(code);
-  if (hashedInput !== otp.codeHash) {
-    await updateEmailOtp(otp.id, { attempts: otp.attempts + 1 });
-    throw ApiError.badRequest('Invalid verification code');
-  }
-
-  await updateEmailOtp(otp.id, { consumedAt: new Date() });
-  await updateUser(user.id, { emailVerifiedAt: new Date() });
-
-  return { message: 'Email verified successfully' };
-};
-
-module.exports = { verifyEmail, resendOtp };

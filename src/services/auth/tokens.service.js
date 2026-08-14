@@ -1,75 +1,117 @@
-const { verifyRefreshToken, signAccessToken, signRefreshToken, hashToken } = require('../../utils/jwt');
-const { setRefreshCookie, clearRefreshCookie } = require('../../utils/cookies');
-const {
-  findRefreshToken,
-  revokeAllRefreshTokensForUser,
-  revokeRefreshToken,
-  rotateRefreshToken,
-} = require('../../repositories/refreshToken.repository');
-const { findUserById } = require('../../repositories/user.repository');
-const { sanitizeUser, resolveVendorType } = require('./_helpers');
-const ApiError = require('../../utils/ApiError');
-const { REFRESH_TTL_MS } = require('./login.service');
+import jwt from 'jsonwebtoken';
+import {
+  signAccessToken,
+  signRefreshToken,
+  verifyRefreshToken,
+  hashToken,
+} from '../../utils/jwt.js';
+import { ApiError } from '../../utils/ApiError.js';
+import * as userRepo from '../../repositories/user.repository.js';
+import * as refreshRepo from '../../repositories/refreshToken.repository.js';
+import * as kycRepo from '../../repositories/vendorKyc.repository.js';
+import {
+  sanitizeUser,
+  buildAccessPayload,
+  buildRefreshPayload,
+} from './_helpers.js';
 
-const refreshTokens = async (res, rawToken) => {
-  if (!rawToken) throw ApiError.unauthorized('Refresh token missing.');
-
+export const refreshTokens = async (incomingRefreshToken) => {
   let payload;
   try {
-    payload = verifyRefreshToken(rawToken);
+    payload = verifyRefreshToken(incomingRefreshToken);
   } catch (error) {
-    clearRefreshCookie(res);
-    if (error.name === 'TokenExpiredError') throw ApiError.unauthorized('Refresh token has expired.');
+    if (error instanceof jwt.TokenExpiredError) {
+      throw ApiError.unauthorized('Refresh token has expired. Please log in again.');
+    }
     throw ApiError.unauthorized('Invalid refresh token.');
   }
 
-  const tokenHash = hashToken(rawToken);
-  const stored = await findRefreshToken(tokenHash);
+  const tokenHash = hashToken(incomingRefreshToken);
+  const stored = await refreshRepo.findRefreshTokenByHash(tokenHash);
 
-  if (!stored || stored.isRevoked) {
-    // Reuse of an already-rotated/revoked token — treat as a replay of a stolen token.
-    await revokeAllRefreshTokensForUser(payload.sub);
-    clearRefreshCookie(res);
-    throw ApiError.unauthorized('Refresh token reuse detected. All sessions have been revoked.');
+  if (!stored) {
+    // Token signature is valid but not in DB — likely already rotated and reused.
+    // Treat as a possible replay attack: revoke all tokens for this user.
+    if (payload?.sub) {
+      await refreshRepo.revokeAllRefreshTokensForUser(payload.sub).catch(() => {});
+    }
+    throw ApiError.unauthorized('Refresh token is no longer valid. Please log in again.');
   }
 
-  const user = await findUserById(payload.sub);
-  if (!user || !user.isActive) {
-    await revokeRefreshToken(tokenHash);
-    clearRefreshCookie(res);
-    throw ApiError.unauthorized('Account is no longer active.');
+  if (stored.isRevoked) {
+    await refreshRepo.revokeAllRefreshTokensForUser(stored.userId).catch(() => {});
+    throw ApiError.unauthorized('Refresh token has been revoked. Please log in again.');
   }
 
-  const vendorType = resolveVendorType(user);
-  const newAccessToken = signAccessToken({
-    sub: user.id,
-    email: user.email,
-    role: user.role,
-    ...(vendorType ? { vendorType } : {}),
+  if (stored.expiresAt.getTime() < Date.now()) {
+    throw ApiError.unauthorized('Refresh token has expired. Please log in again.');
+  }
+
+  const user = await userRepo.findUserById(stored.userId);
+  if (!user) {
+    throw ApiError.unauthorized('User no longer exists.');
+  }
+  if (!user.isActive) {
+    // Surface the same "under review" message vendors see on login, so the
+    // frontend can route them to the right screen instead of treating it as
+    // a generic auth error.
+    if (user.role === 'VENDOR') {
+      const profile = await kycRepo.findVendorProfile(user.id);
+      if (profile?.kycStatus === 'SUBMITTED') {
+        throw new ApiError(
+          403,
+          'Your application is under review. We will email you once your account is approved.',
+          { code: 'ACCOUNT_UNDER_REVIEW', kycStatus: 'SUBMITTED' },
+        );
+      }
+    }
+    throw new ApiError(
+      403,
+      'This account has been deactivated. Please contact support.',
+      { code: 'ACCOUNT_DEACTIVATED' },
+    );
+  }
+
+  // For vendors, fetch vendorType from VendorProfile so it lands in the new
+  // access token — otherwise requireVendorType middleware sees undefined and
+  // fails all vendor-type-gated routes after every refresh.
+  const vendorProfile =
+    user.role === 'VENDOR' ? await kycRepo.findVendorKycStatus(user.id) : null;
+
+  const payloadUser =
+    user.role === 'VENDOR'
+      ? { ...user, vendorType: vendorProfile?.vendorType ?? 'TRAVEL_AGENT' }
+      : user;
+
+  const newAccessToken = signAccessToken(buildAccessPayload(payloadUser));
+  const { token: newRefreshToken } = signRefreshToken(buildRefreshPayload(payloadUser));
+  const decoded = jwt.decode(newRefreshToken);
+  const newExpiresAt = new Date(decoded.exp * 1000);
+
+  await refreshRepo.rotateRefreshToken({
+    oldTokenId: stored.id,
+    newTokenHash: hashToken(newRefreshToken),
+    userId: user.id,
+    expiresAt: newExpiresAt,
   });
-  const newRefreshToken = signRefreshToken({ sub: user.id, role: user.role });
-  const newRefreshTokenHash = hashToken(newRefreshToken);
-  const refreshExpiresAt = new Date(Date.now() + REFRESH_TTL_MS);
-
-  await rotateRefreshToken({ oldToken: tokenHash, newToken: newRefreshTokenHash, userId: user.id, expiresAt: refreshExpiresAt });
-  setRefreshCookie(res, newRefreshToken, refreshExpiresAt);
 
   return {
-    user: sanitizeUser(user),
     accessToken: newAccessToken,
     refreshToken: newRefreshToken,
-    refreshExpiresAt,
+    refreshExpiresAt: newExpiresAt,
+    user: sanitizeUser(user),
   };
 };
 
-const logoutUser = async (res, rawToken) => {
-  if (rawToken) {
-    const tokenHash = hashToken(rawToken);
-    const stored = await findRefreshToken(tokenHash);
-    if (stored) await revokeRefreshToken(tokenHash);
-  }
-  clearRefreshCookie(res);
-  return { message: 'Logged out successfully' };
-};
+export const logoutUser = async (incomingRefreshToken) => {
+  const tokenHash = hashToken(incomingRefreshToken);
+  const stored = await refreshRepo.findRefreshTokenByHash(tokenHash);
 
-module.exports = { refreshTokens, logoutUser };
+  // Idempotent: missing / already-revoked tokens still return success.
+  if (!stored || stored.isRevoked) {
+    return { revoked: false };
+  }
+
+  await refreshRepo.revokeRefreshTokenById(stored.id);
+  return { revoked: true };
+};

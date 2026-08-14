@@ -1,0 +1,14 @@
+// Join table: which ServiceCategory rows a vendor selected as "services we
+// offer" during KYC submission. A real relation (not a string array) so
+// category deletion/renames stay consistent and vendors can be queried by
+// category later (e.g. matching leads to vendors).
+model VendorKycServiceCategory {
+  vendorUserId String
+  categoryId   String
+
+  kyc      VendorKyc       @relation(fields: [vendorUserId], references: [vendorUserId], onDelete: Cascade)
+  category ServiceCategory @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+
+  @@id([vendorUserId, categoryId])
+  @@map("vendor_kyc_service_categories")
+}

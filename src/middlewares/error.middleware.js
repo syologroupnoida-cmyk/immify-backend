@@ -1,37 +1,52 @@
-const { env } = require('../config/env');
-const { sendError } = require('../utils/response');
-const ApiError = require('../utils/ApiError');
+import { Prisma } from '@prisma/client';
+import { ApiError } from '../utils/ApiError.js';
+import { sendError } from '../utils/response.js';
+import { isProduction } from '../config/env.js';
 
-const errorHandler = (err, _req, res, _next) => {
+export const notFoundHandler = (req, _res, next) => {
+  next(ApiError.notFound(`Route not found: ${req.method} ${req.originalUrl}`));
+};
+
+export const errorHandler = (err, req, res, _next) => {
   if (err instanceof ApiError) {
-    return sendError(res, { statusCode: err.statusCode, message: err.message, details: err.details });
-  }
-
-  if (err?.name === 'ZodError') {
     return sendError(res, {
-      statusCode: 400,
-      message: 'Validation failed',
-      details: err.issues?.map((issue) => ({ field: issue.path.join('.'), message: issue.message, code: issue.code })) || err.message,
+      statusCode: err.statusCode,
+      message: err.message,
+      details: err.details,
     });
   }
 
-  if (err?.code === 'P2002') {
-    return sendError(res, { statusCode: 409, message: 'A record with this value already exists.' });
+  if (err instanceof Prisma.PrismaClientKnownRequestError) {
+    if (err.code === 'P2002') {
+      const target = Array.isArray(err.meta?.target) ? err.meta.target.join(', ') : 'field';
+      return sendError(res, {
+        statusCode: 409,
+        message: `A record with this ${target} already exists.`,
+      });
+    }
+    if (err.code === 'P2025') {
+      return sendError(res, { statusCode: 404, message: 'Resource not found.' });
+    }
   }
 
-  if (err?.code === 'P2025') {
-    return sendError(res, { statusCode: 404, message: 'Record not found.' });
+  if (err instanceof Prisma.PrismaClientValidationError) {
+    return sendError(res, { statusCode: 400, message: 'Invalid database query parameters.' });
   }
 
   if (err?.type === 'entity.parse.failed') {
-    return sendError(res, { statusCode: 400, message: 'Malformed JSON body.' });
+    return sendError(res, { statusCode: 400, message: 'Malformed JSON in request body.' });
   }
 
-  console.error(err);
+  console.error('[error]', {
+    method: req.method,
+    url: req.originalUrl,
+    message: err?.message,
+    stack: err?.stack,
+  });
+
   return sendError(res, {
     statusCode: 500,
-    message: env.NODE_ENV === 'production' ? 'Internal server error.' : err.message || 'Internal server error.',
+    message: 'Internal server error',
+    details: isProduction ? null : { message: err?.message },
   });
 };
-
-module.exports = errorHandler;

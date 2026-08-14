@@ -1,0 +1,17 @@
+// Admin-managed catalog of service categories (e.g. "Immigration Services",
+// "Visa Services"). Super-admin creates/edits these; child services live in
+// the `Service` model (see service.prisma).
+model ServiceCategory {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  slug        String   @unique
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  services            Service[]
+  vendorKycSelections VendorKycServiceCategory[]
+
+  @@map("service_categories")
+}

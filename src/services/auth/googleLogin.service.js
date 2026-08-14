@@ -1,94 +1,95 @@
-const { OAuth2Client } = require('google-auth-library');
-const crypto = require('crypto');
-const { env } = require('../../config/env');
-const { findUserByGoogleId, findUserByEmail, createUser, updateUser } = require('../../repositories/user.repository');
-const { createVendorProfile } = require('../../repositories/vendorProfile.repository');
-const { issueTokenPair, sanitizeUser } = require('./_helpers');
-const { REFRESH_TTL_MS } = require('./login.service');
-const ApiError = require('../../utils/ApiError');
+import { ApiError } from '../../utils/ApiError.js';
+import { verifyGoogleIdToken } from '../../utils/googleAuth.js';
+import * as userRepo from '../../repositories/user.repository.js';
+import * as kycRepo from '../../repositories/vendorKyc.repository.js';
+import { SELF_SIGNUP_ROLES } from '../../validators/auth.validator.js';
+import { sanitizeUser, issueTokenPair } from './_helpers.js';
 
-const client = new OAuth2Client(env.GOOGLE_CLIENT_ID);
+const buildLoginResult = (user, isNewAccount, vendorProfile) => ({
+  user: sanitizeUser(user, { vendorProfile }),
+  isNewAccount,
+});
 
-const ID_PREFIXES = { VENDOR: 'VEND', ADMIN: 'ADMIN', SUPER_ADMIN: 'SUPER', CLIENT: 'CLIENT' };
-const MAX_ID_RETRIES = 5;
-const generateUserId = (role) => `${ID_PREFIXES[role] || 'CLIENT'}-${String(crypto.randomInt(0, 999999)).padStart(6, '0')}`;
-
-const verifyGoogleToken = async (idToken) => {
-  try {
-    const ticket = await client.verifyIdToken({ idToken, audience: env.GOOGLE_CLIENT_ID });
-    return ticket.getPayload();
-  } catch (error) {
-    throw ApiError.unauthorized('Invalid Google token.');
+const createUserForRole = async ({ role, vendorType, identity }) => {
+  if (role === 'VENDOR') {
+    return userRepo.createAgentViaGoogle({ ...identity, vendorType });
   }
+  return userRepo.createCustomerViaGoogle(identity);
 };
 
-const googleLogin = async (res, { token, role, vendorType }) => {
-  const payload = await verifyGoogleToken(token);
+/**
+ * Single entry point for all Google sign-in flows.
+ *
+ * 1. Verify the ID token (signature, audience, issuer, expiry, email_verified).
+ * 2. Returning user (matched by googleId) → log in.
+ * 3. Existing email (matched by email)    → link, log in.
+ * 4. Brand-new email                       → create + log in (needs `role`).
+ *
+ * Mirrors the shape of loginUser so the controller treats both flows identically.
+ */
+export const loginWithGoogle = async ({ token, role, vendorType }) => {
+  const identity = await verifyGoogleIdToken(token);
 
-  if (!payload?.email_verified) {
-    throw ApiError.unauthorized('Google account email is not verified.');
-  }
+  // 1) Returning Google user
+  let user = await userRepo.findUserByGoogleId(identity.googleId);
+  let isNewAccount = false;
 
-  const googleId = payload.sub;
-  const email = payload.email;
-
-  let user = await findUserByGoogleId(googleId);
-
+  // 2) Existing email account, first time signing in with Google → auto-link
   if (!user) {
-    user = await findUserByEmail(email);
-    if (user) {
-      user = await updateUser(user.id, { googleId, authProvider: 'HYBRID' });
-    }
-  }
-
-  if (!user) {
-    if (!role) throw ApiError.badRequest('Role is required for new account registration.', { code: 'ROLE_REQUIRED' });
-
-    let created;
-    for (let attempt = 0; attempt < MAX_ID_RETRIES; attempt += 1) {
-      try {
-        created = await createUser({
-          id: generateUserId(role),
-          firstName: payload.given_name || '',
-          lastName: payload.family_name || '',
-          email,
-          phone: null,
-          password: null,
-          role,
-          authProvider: 'GOOGLE',
-          googleId,
-          avatarUrl: payload.picture,
-          emailVerifiedAt: new Date(),
-        });
-        break;
-      } catch (error) {
-        if (error.code === 'P2002' && error.meta?.target?.includes('id') && attempt < MAX_ID_RETRIES - 1) continue;
-        throw error;
+    const byEmail = await userRepo.findUserByEmail(identity.email);
+    if (byEmail) {
+      if (!byEmail.isActive) {
+        throw ApiError.forbidden('This account has been deactivated.');
       }
+      user = await userRepo.linkGoogleAccount({
+        userId: byEmail.id,
+        googleId: identity.googleId,
+        avatarUrl: identity.avatarUrl,
+        hasPassword: Boolean(byEmail.password),
+      });
     }
-    user = created;
+  }
 
-    if (role === 'VENDOR') {
-      user.vendorProfile = await createVendorProfile({ userId: user.id, vendorType: vendorType || 'TRAVEL_AGENT' });
+  // 3) Brand-new account
+  if (!user) {
+    if (!role) {
+      throw ApiError.badRequest(
+        'A `role` is required to create a new account. Pass role: "CLIENT" or "VENDOR".',
+        { code: 'ROLE_REQUIRED' },
+      );
     }
+    if (!SELF_SIGNUP_ROLES.includes(role)) {
+      throw ApiError.badRequest('Role must be either "CLIENT" or "VENDOR".');
+    }
+
+    user = await createUserForRole({
+      role,
+      vendorType, // Optional — defaults to TRAVEL_AGENT inside the repo layer.
+      identity: {
+        firstName: identity.firstName,
+        lastName: identity.lastName,
+        email: identity.email,
+        googleId: identity.googleId,
+        avatarUrl: identity.avatarUrl,
+      },
+    });
+    isNewAccount = true;
   }
 
   if (!user.isActive) {
-    if (user.role === 'VENDOR' && user.vendorProfile?.kycStatus === 'SUBMITTED') {
-      throw ApiError.forbidden('Your application is under review. We will notify you once it is approved.');
-    }
-    throw ApiError.forbidden('Your account has been deactivated.');
+    throw ApiError.forbidden('This account has been deactivated.');
   }
 
-  const refreshExpiresAt = new Date(Date.now() + REFRESH_TTL_MS);
-  const tokenPair = await issueTokenPair(res, user, refreshExpiresAt);
+  // Fetch vendorProfile BEFORE issuing tokens so vendorType lands in the JWT.
+  const vendorProfile =
+    user.role === 'VENDOR' ? await kycRepo.findVendorKycStatus(user.id) : null;
+
+  const tokens = await issueTokenPair(user, { vendorProfile });
 
   return {
-    user: sanitizeUser(user),
-    accessToken: tokenPair.accessToken,
-    refreshToken: tokenPair.refreshToken,
-    refreshExpiresAt: tokenPair.refreshExpiresAt,
+    ...buildLoginResult(user, isNewAccount, vendorProfile),
+    accessToken: tokens.accessToken,
+    refreshToken: tokens.refreshToken,
+    refreshExpiresAt: tokens.refreshExpiresAt,
   };
 };
-
-module.exports = { googleLogin };

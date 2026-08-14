@@ -1,18 +1,24 @@
-const crypto = require('crypto');
-const { env } = require('../config/env');
+import crypto from 'node:crypto';
+import { env } from '../config/env.js';
 
-const generateOtp = (length = env.OTP_LENGTH) => {
-  const digits = '0123456789';
-  let code = '';
-  for (let i = 0; i < length; i += 1) {
-    const index = crypto.randomInt(0, digits.length);
-    code += digits[index];
-  }
+export const generateOtp = (length = env.OTP_LENGTH) => {
+  // crypto.randomInt is unbiased — Math.random is not suitable for security codes.
+  const max = 10 ** length;
+  const code = crypto.randomInt(0, max).toString().padStart(length, '0');
   return code;
 };
 
-const hashOtp = (code) => crypto.createHash('sha256').update(code).digest('hex');
+export const hashOtp = (code) => {
+  return crypto.createHash('sha256').update(String(code)).digest('hex');
+};
 
-const otpExpiry = (minutes = env.OTP_TTL_MINUTES) => new Date(Date.now() + minutes * 60 * 1000);
+export const otpExpiry = (minutes = env.OTP_TTL_MINUTES) => {
+  return new Date(Date.now() + minutes * 60 * 1000);
+};
 
-module.exports = { generateOtp, hashOtp, otpExpiry };
+export const constantTimeEquals = (a, b) => {
+  const bufA = Buffer.from(String(a));
+  const bufB = Buffer.from(String(b));
+  if (bufA.length !== bufB.length) return false;
+  return crypto.timingSafeEqual(bufA, bufB);
+};

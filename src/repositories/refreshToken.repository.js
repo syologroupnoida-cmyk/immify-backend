@@ -1,14 +1,49 @@
-const { prisma } = require('../config/prisma');
+import prisma from '../config/db.js';
 
-const createRefreshToken = async ({ token, userId, expiresAt }) => prisma.refreshToken.create({ data: { token, userId, expiresAt } });
-const findRefreshToken = async (token) => prisma.refreshToken.findUnique({ where: { token } });
-const revokeRefreshToken = async (token) => prisma.refreshToken.update({ where: { token }, data: { isRevoked: true } });
-const revokeAllRefreshTokensForUser = async (userId) => prisma.refreshToken.updateMany({ where: { userId }, data: { isRevoked: true } });
+export const createRefreshToken = async ({ tokenHash, userId, expiresAt }) => {
+  return prisma.refreshToken.create({
+    data: {
+      token: tokenHash,
+      userId,
+      expiresAt,
+    },
+  });
+};
 
-const rotateRefreshToken = async ({ oldToken, newToken, userId, expiresAt }) =>
-  prisma.$transaction([
-    prisma.refreshToken.update({ where: { token: oldToken }, data: { isRevoked: true } }),
-    prisma.refreshToken.create({ data: { token: newToken, userId, expiresAt } }),
+export const findRefreshTokenByHash = async (tokenHash) => {
+  return prisma.refreshToken.findUnique({
+    where: { token: tokenHash },
+  });
+};
+
+export const revokeRefreshTokenById = async (id) => {
+  return prisma.refreshToken.update({
+    where: { id },
+    data: { isRevoked: true },
+  });
+};
+
+export const revokeAllRefreshTokensForUser = async (userId) => {
+  return prisma.refreshToken.updateMany({
+    where: { userId, isRevoked: false },
+    data: { isRevoked: true },
+  });
+};
+
+export const rotateRefreshToken = async ({ oldTokenId, newTokenHash, userId, expiresAt }) => {
+  return prisma.$transaction([
+    prisma.refreshToken.update({
+      where: { id: oldTokenId },
+      data: { isRevoked: true },
+    }),
+    prisma.refreshToken.create({
+      data: { token: newTokenHash, userId, expiresAt },
+    }),
   ]);
+};
 
-module.exports = { createRefreshToken, findRefreshToken, revokeRefreshToken, revokeAllRefreshTokensForUser, rotateRefreshToken };
+export const deleteExpiredRefreshTokens = async () => {
+  return prisma.refreshToken.deleteMany({
+    where: { expiresAt: { lt: new Date() } },
+  });
+};

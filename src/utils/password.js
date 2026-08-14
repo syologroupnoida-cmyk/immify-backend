@@ -1,14 +1,14 @@
-const bcrypt = require('bcrypt');
-const { env } = require('../config/env');
+import bcrypt from 'bcrypt';
+import { env } from '../config/env.js';
 
-const hashPassword = async (plain) => {
-  if (!plain) return null;
-  return bcrypt.hash(plain, env.BCRYPT_SALT_ROUNDS);
+export const hashPassword = async (plainPassword) => {
+  if (typeof plainPassword !== 'string' || plainPassword.length === 0) {
+    throw new Error('hashPassword: plainPassword must be a non-empty string.');
+  }
+  return bcrypt.hash(plainPassword, env.BCRYPT_SALT_ROUNDS);
 };
 
-const comparePassword = async (plain, hash) => {
-  if (!plain || !hash) return false;
-  return bcrypt.compare(plain, hash);
+export const comparePassword = async (plainPassword, hashedPassword) => {
+  if (!plainPassword || !hashedPassword) return false;
+  return bcrypt.compare(plainPassword, hashedPassword);
 };
-
-module.exports = { hashPassword, comparePassword };

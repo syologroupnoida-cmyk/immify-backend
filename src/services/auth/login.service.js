@@ -1,43 +1,71 @@
-const { comparePassword } = require('../../utils/password');
-const { issueTokenPair, sanitizeUser, sendOtpEmail } = require('./_helpers');
-const { findUserByEmail } = require('../../repositories/user.repository');
-const { createEmailOtp } = require('../../repositories/emailOtp.repository');
-const { generateOtp, hashOtp, otpExpiry } = require('../../utils/otp');
-const { env } = require('../../config/env');
-const ApiError = require('../../utils/ApiError');
+import { comparePassword } from '../../utils/password.js';
+import { ApiError } from '../../utils/ApiError.js';
+import * as userRepo from '../../repositories/user.repository.js';
+import * as kycRepo from '../../repositories/vendorKyc.repository.js';
+import {
+  sanitizeUser,
+  issueTokenPair,
+  issueAndSendVerificationOtp,
+} from './_helpers.js';
 
-const REFRESH_TTL_MS = 7 * 24 * 60 * 60 * 1000;
+/**
+ * For a deactivated vendor, decide which error to return. Vendors who just
+ * submitted KYC get a clear "under review" message; everyone else gets the
+ * generic deactivation message.
+ */
+const buildDeactivationError = async (user) => {
+  if (user.role === 'VENDOR') {
+    const profile = await kycRepo.findVendorProfile(user.id);
+    if (profile?.kycStatus === 'SUBMITTED') {
+      return new ApiError(
+        403,
+        'Your application is under review. We will email you once your account is approved.',
+        { code: 'ACCOUNT_UNDER_REVIEW', kycStatus: 'SUBMITTED' },
+      );
+    }
+  }
+  return new ApiError(
+    403,
+    'This account has been deactivated. Please contact support.',
+    { code: 'ACCOUNT_DEACTIVATED' },
+  );
+};
 
-const loginUser = async (res, { email, password }) => {
-  const user = await findUserByEmail(email);
-  if (!user) throw ApiError.unauthorized('Invalid email or password.');
+export const loginUser = async ({ email, password }) => {
+  const user = await userRepo.findUserByEmail(email);
+  if (!user) {
+    throw ApiError.unauthorized('Invalid email or password.');
+  }
+  if (!user.isActive) {
+    throw await buildDeactivationError(user);
+  }
 
   const passwordMatches = await comparePassword(password, user.password);
-  if (!passwordMatches) throw ApiError.unauthorized('Invalid email or password.');
-
-  if (!user.isActive) {
-    if (user.role === 'VENDOR' && user.vendorProfile?.kycStatus === 'SUBMITTED') {
-      throw ApiError.forbidden('Your application is under review. We will notify you once it is approved.');
-    }
-    throw ApiError.forbidden('Your account has been deactivated.');
+  if (!passwordMatches) {
+    throw ApiError.unauthorized('Invalid email or password.');
   }
 
   if (!user.emailVerifiedAt) {
-    const otpCode = generateOtp(env.OTP_LENGTH);
-    await createEmailOtp({ userId: user.id, codeHash: hashOtp(otpCode), purpose: 'EMAIL_VERIFICATION', expiresAt: otpExpiry(env.OTP_TTL_MINUTES) });
-    await sendOtpEmail(user.email, otpCode, 'EMAIL_VERIFICATION');
-    throw ApiError.forbidden('EMAIL_NOT_VERIFIED', { code: 'EMAIL_NOT_VERIFIED' });
+    // Auto-send a fresh OTP so the user can complete verification right away.
+    await issueAndSendVerificationOtp(user);
+    throw new ApiError(
+      403,
+      'Email not verified. We have sent a new verification code to your inbox.',
+      { code: 'EMAIL_NOT_VERIFIED', email: user.email },
+    );
   }
 
-  const refreshExpiresAt = new Date(Date.now() + REFRESH_TTL_MS);
-  const tokenPair = await issueTokenPair(res, user, refreshExpiresAt);
+  // Vendors need vendorType + KYC status BEFORE issuing tokens — vendorType
+  // gets embedded in the JWT so middleware can gate routes without a DB hit.
+  const vendorProfile =
+    user.role === 'VENDOR' ? await kycRepo.findVendorKycStatus(user.id) : null;
+
+  const tokens = await issueTokenPair(user, { vendorProfile });
 
   return {
-    user: sanitizeUser(user),
-    accessToken: tokenPair.accessToken,
-    refreshToken: tokenPair.refreshToken,
-    refreshExpiresAt: tokenPair.refreshExpiresAt,
+    user: sanitizeUser(user, { vendorProfile }),
+    accessToken: tokens.accessToken,
+    refreshToken: tokens.refreshToken,
+    refreshExpiresAt: tokens.refreshExpiresAt,
   };
 };
-
-module.exports = { loginUser, REFRESH_TTL_MS };

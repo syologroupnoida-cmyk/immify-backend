@@ -10,8 +10,13 @@ model ServiceCategory {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  services            Service[]
-  vendorKycSelections VendorKycServiceCategory[]
+  services              Service[]
+  vendorKycSelections   VendorKycServiceCategory[]
+  vendorOfferings       VendorCategoryOffering[]
+  leads                 Lead[]
+  subscriptionPlans     SubscriptionPlanCategory[]
+  subscriptionSnapshots VendorSubscriptionCategory[]
+  vendorListings        VendorServiceListing[]
 
   @@map("service_categories")
 }

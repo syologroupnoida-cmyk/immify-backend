@@ -5,6 +5,7 @@ import {
   assertEmailAndPhoneAvailable,
   issueAndSendVerificationOtp,
 } from './_helpers.js';
+import { VENDOR_JOINING_BONUS_CREDITS } from '../../repositories/user.repository.js';
 
 export const registerCustomer = async ({ firstName, lastName, email, phone, password }) => {
   await assertEmailAndPhoneAvailable({ email, phone });
@@ -33,7 +34,7 @@ export const registerAgent = async ({
   email,
   phone,
   password,
-  vendorType = 'TRAVEL_AGENT',
+  vendorType = 'CONSULTANCY',
 }) => {
   await assertEmailAndPhoneAvailable({ email, phone });
   const passwordHash = await hashPassword(password);
@@ -53,8 +54,13 @@ export const registerAgent = async ({
   // include them in the response — pass them here since we just created it.
   return {
     user: sanitizeUser(user, {
-      vendorProfile: { vendorType, kycStatus: 'PENDING' },
+      vendorProfile: {
+        vendorType,
+        kycStatus: 'PENDING',
+        creditBalance: VENDOR_JOINING_BONUS_CREDITS,
+      },
     }),
+    joiningBonusCredits: VENDOR_JOINING_BONUS_CREDITS,
     emailVerificationRequired: true,
     otp,
   };

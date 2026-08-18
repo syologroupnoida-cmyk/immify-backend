@@ -6,9 +6,11 @@ export const USER_ROLES = ['SUPER_ADMIN', 'ADMIN', 'VENDOR', 'CLIENT'];
 // created via the SuperAdmin endpoint, never via the public auth API.
 export const SELF_SIGNUP_ROLES = ['CLIENT', 'VENDOR'];
 
-// Business type a VENDOR can register as. Grows as new modules ship.
-// Not applicable to CLIENT — a traveller has no vendor type.
-export const VENDOR_TYPES = ['TRAVEL_AGENT', 'PROPERTY_OWNER'];
+// Business type a VENDOR can register as. Currently a single value — what a
+// vendor actually offers (Immigration, Visa, Study Abroad, ...) is captured
+// per-vendor via ServiceCategory selection on their KYC, not here.
+// Not applicable to CLIENT — a client has no vendor type.
+export const VENDOR_TYPES = ['CONSULTANCY'];
 
 const passwordSchema = z
   .string({ required_error: 'Password is required' })
@@ -45,7 +47,7 @@ export const registerSchema = z
     role: z.enum(['CLIENT', 'VENDOR'], {
       errorMap: () => ({ message: 'Role must be either "CLIENT" or "VENDOR"' }),
     }),
-    // Only meaningful when role === 'VENDOR'. Defaults to TRAVEL_AGENT in the
+    // Only meaningful when role === 'VENDOR'. Defaults to CONSULTANCY in the
     // service layer if omitted, preserving backward compatibility with old
     // frontends that only send `role`.
     vendorType: z.enum(VENDOR_TYPES, {
@@ -135,7 +137,7 @@ export const resetPasswordSchema = z
 // `role` + `vendorType` are only used when creating a brand-new account.
 // Existing users just send the token. Server enforces the "role required for
 // new signup" rule (and vendorType is optional even then — defaults to
-// TRAVEL_AGENT in the repo layer).
+// CONSULTANCY in the repo layer).
 export const googleLoginSchema = z
   .object({
     token: z

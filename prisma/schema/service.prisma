@@ -9,8 +9,12 @@ model Service {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  category ServiceCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  category        ServiceCategory         @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  vendorOfferings VendorServiceOffering[]
+  leads           Lead[]
+  vendorListings  VendorServiceListing[]
 
   @@unique([categoryId, name])
+  @@index([categoryId, isActive])
   @@map("services")
 }

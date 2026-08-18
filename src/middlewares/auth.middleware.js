@@ -77,7 +77,9 @@ export const authorizeRoles = (allowedRoles = []) => {
   };
 };
 
-// Gate a route on the VENDOR's business type (TRAVEL_AGENT / PROPERTY_OWNER / ...).
+// Gate a route on the VENDOR's business type. VendorType is currently a
+// single CONSULTANCY value (see enums.prisma) — this middleware is unused
+// today but kept for the day a genuinely structural vendor split shows up.
 // Use AFTER authenticateUser + authorizeRoles(['VENDOR']).
 //
 // Reads vendorType from the JWT payload (set by authenticateUser), so no DB
@@ -88,7 +90,7 @@ export const authorizeRoles = (allowedRoles = []) => {
 //   router.post('/vendor/packages',
 //     authenticateUser,
 //     authorizeRoles(['VENDOR']),
-//     requireVendorType('TRAVEL_AGENT'),
+//     requireVendorType('CONSULTANCY'),
 //     ...handlers,
 //   );
 export const requireVendorType = (...allowedTypes) => {

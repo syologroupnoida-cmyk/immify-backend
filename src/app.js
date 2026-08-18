@@ -61,7 +61,7 @@ if (isProduction) {
 }
 
 app.get('/', (_req, res) => {
-  res.json({ success: true, message: 'Emmify API', version: '1.0.0' });
+  res.json({ success: true, message: 'Immify API', version: '1.0.0' });
 });
 
 app.use('/api/v1', apiRouter);

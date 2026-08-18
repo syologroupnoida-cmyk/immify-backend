@@ -171,7 +171,7 @@ export const me = asyncHandler(async (req, res) => {
   if (user.role === 'VENDOR') {
     const vendorProfile = await findVendorKycStatus(user.id);
     const kycStatus = vendorProfile?.kycStatus ?? 'NOT_SUBMITTED';
-    const vendorType = vendorProfile?.vendorType ?? 'TRAVEL_AGENT';
+    const vendorType = vendorProfile?.vendorType ?? 'CONSULTANCY';
     user.vendorType = vendorType;
     user.vendorProfile = {
       vendorType,

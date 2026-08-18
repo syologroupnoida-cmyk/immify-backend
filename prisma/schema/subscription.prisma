@@ -1,0 +1,132 @@
+model SubscriptionPlan {
+  id                    String                    @id @default(uuid())
+  name                  String
+  slug                  String                    @unique
+  description           String?
+  status                SubscriptionPlanStatus    @default(DRAFT)
+  priceInPaise          Int
+  currency              String                    @default("INR")
+  billingPeriod         SubscriptionBillingPeriod @default(MONTHLY)
+  durationDays          Int
+  maxPublicServices     Int?
+  maxJobPosts           Int?
+  jobPortalAccess       Boolean                   @default(false)
+  directLeadCreditPrice Int
+  displayOrder          Int                       @default(0)
+  isFeatured            Boolean                   @default(false)
+  createdByAdminId      String
+  updatedByAdminId      String?
+  activatedAt           DateTime?
+  archivedAt            DateTime?
+  createdAt             DateTime                  @default(now())
+  updatedAt             DateTime                  @updatedAt
+
+  categories    SubscriptionPlanCategory[]
+  subscriptions VendorSubscription[]
+
+  @@index([status, displayOrder])
+  @@map("subscription_plans")
+}
+
+model SubscriptionPlanCategory {
+  planId     String
+  categoryId String
+  createdAt  DateTime @default(now())
+
+  plan     SubscriptionPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+  category ServiceCategory  @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+
+  @@id([planId, categoryId])
+  @@index([categoryId])
+  @@map("subscription_plan_categories")
+}
+
+model VendorSubscription {
+  id                 String                   @id @default(uuid())
+  vendorUserId       String
+  planId             String
+  status             VendorSubscriptionStatus @default(PENDING_PAYMENT)
+  startsAt           DateTime?
+  expiresAt          DateTime?
+  cancelledAt        DateTime?
+  cancellationReason String?
+  autoRenew          Boolean                  @default(false)
+
+  planNameSnapshot              String
+  priceInPaiseSnapshot          Int
+  currencySnapshot              String
+  maxPublicServicesSnapshot     Int?
+  maxJobPostsSnapshot           Int?
+  jobPortalAccessSnapshot       Boolean
+  directLeadCreditPriceSnapshot Int
+  durationDaysSnapshot          Int
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  vendor     VendorProfile                @relation(fields: [vendorUserId], references: [userId], onDelete: Restrict)
+  plan       SubscriptionPlan             @relation(fields: [planId], references: [id], onDelete: Restrict)
+  categories VendorSubscriptionCategory[]
+  payments   SubscriptionPayment[]
+
+  @@index([vendorUserId, status, expiresAt])
+  @@index([planId, status])
+  @@map("vendor_subscriptions")
+}
+
+model VendorSubscriptionCategory {
+  subscriptionId String
+  categoryId     String
+
+  subscription VendorSubscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  category     ServiceCategory    @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+
+  @@id([subscriptionId, categoryId])
+  @@index([categoryId])
+  @@map("vendor_subscription_categories")
+}
+
+model SubscriptionPayment {
+  id                String                    @id @default(uuid())
+  subscriptionId    String
+  status            SubscriptionPaymentStatus @default(CREATED)
+  provider          String                    @default("MANUAL")
+  providerOrderId   String?                   @unique
+  providerPaymentId String?                   @unique
+  amountInPaise     Int
+  currency          String                    @default("INR")
+  paidAt            DateTime?
+  failedAt          DateTime?
+  refundedAt        DateTime?
+  providerResponse  Json?
+  createdAt         DateTime                  @default(now())
+  updatedAt         DateTime                  @updatedAt
+
+  subscription VendorSubscription @relation(fields: [subscriptionId], references: [id], onDelete: Restrict)
+
+  @@index([subscriptionId, status])
+  @@map("subscription_payments")
+}
+
+model VendorServiceListing {
+  id           String   @id @default(uuid())
+  vendorUserId String
+  categoryId   String
+  serviceId    String?
+  title        String
+  description  String?
+  dynamicData  Json?
+  isPublished  Boolean  @default(false)
+  isVisible    Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  vendor   VendorProfile   @relation(fields: [vendorUserId], references: [userId], onDelete: Cascade)
+  category ServiceCategory @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  service  Service?        @relation(fields: [serviceId], references: [id], onDelete: Restrict)
+  leads    Lead[]
+
+  @@index([vendorUserId, isPublished, isVisible])
+  @@index([categoryId, isPublished, isVisible])
+  @@map("vendor_service_listings")
+}

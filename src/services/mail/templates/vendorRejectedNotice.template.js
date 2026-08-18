@@ -1,13 +1,13 @@
 export const vendorRejectedNoticeTemplate = ({ firstName, reason, loginUrl }) => {
   const safeName = firstName || 'there';
-  const subject = 'Update on your Emmify vendor application';
+  const subject = 'Update on your Immify vendor application';
   const safeLoginUrl = loginUrl || '#';
   const safeReason = reason || 'No specific reason was provided.';
 
   const text = [
     `Hi ${safeName},`,
     '',
-    `Thanks for applying to become an Emmify vendor. After reviewing your`,
+    `Thanks for applying to become an Immify vendor. After reviewing your`,
     `submission, we were unable to approve your account at this time.`,
     '',
     `Reason: ${safeReason}`,
@@ -17,13 +17,13 @@ export const vendorRejectedNoticeTemplate = ({ firstName, reason, loginUrl }) =>
     '',
     `If you believe this was a mistake or need clarification, reply to this email.`,
     '',
-    `— Emmify Team`,
+    `— Immify Team`,
   ].join('\n');
 
   const html = `
   <div style="font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif;max-width:560px;margin:0 auto;padding:24px;color:#0f172a;">
     <h2 style="margin:0 0 16px;font-size:20px;">Update on your application</h2>
-    <p style="margin:0 0 16px;font-size:14px;line-height:1.5;">Hi ${safeName}, thanks for applying to become an Emmify vendor. After reviewing your submission, we were unable to approve your account at this time.</p>
+    <p style="margin:0 0 16px;font-size:14px;line-height:1.5;">Hi ${safeName}, thanks for applying to become an Immify vendor. After reviewing your submission, we were unable to approve your account at this time.</p>
     <div style="background:#fef2f2;border-left:4px solid #b91c1c;padding:12px 16px;border-radius:4px;margin:16px 0;">
       <strong style="display:block;color:#7f1d1d;font-size:13px;margin-bottom:4px;">Reason</strong>
       <span style="font-size:14px;color:#0f172a;">${safeReason}</span>

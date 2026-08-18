@@ -81,7 +81,7 @@ prisma/
 ## 2. Data model
 
 - **User** — id (`VEND-xxxxxx` / `CLIENT-xxxxxx` / `ADMIN-xxxxxx` / `SUDO-xxxxxx`), role (`SUPER_ADMIN`/`ADMIN`/`VENDOR`/`CLIENT`), auth provider (LOCAL/GOOGLE/HYBRID).
-- **VendorProfile** — 1:1 with a VENDOR user. `vendorType` (`TRAVEL_AGENT`/`PROPERTY_OWNER`), `kycStatus` (`PENDING`/`SUBMITTED`/`APPROVED`/`REJECTED`).
+- **VendorProfile** — 1:1 with a VENDOR user. `vendorType` (`CONSULTANCY` — single value; what a vendor offers is captured via `ServiceCategory` selection on their KYC, not here), `kycStatus` (`PENDING`/`SUBMITTED`/`APPROVED`/`REJECTED`).
 - **CustomerProfile** — 1:1 with a CLIENT user (minimal today).
 - **VendorKyc** — one company-level KYC submission per vendor.
 - **VendorKycDocument** — one row per (vendor, document type), tracks both admin manual verification and third-party (Surepass) verification.

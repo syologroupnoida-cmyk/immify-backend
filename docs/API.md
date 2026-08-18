@@ -24,7 +24,7 @@ Auth: send `Authorization: Bearer <accessToken>` on protected routes. The refres
 
 | Method | Path | Auth | Body |
 |---|---|---|---|
-| POST | `/auth/register` | Public | `{ firstName, lastName, email, phone, password, role: "CLIENT"\|"VENDOR", vendorType?: "TRAVEL_AGENT"\|"PROPERTY_OWNER" }` |
+| POST | `/auth/register` | Public | `{ firstName, lastName, email, phone, password, role: "CLIENT"\|"VENDOR", vendorType?: "CONSULTANCY" }` |
 | POST | `/auth/login` | Public | `{ email, password }` |
 | POST | `/auth/google/login` | Public | `{ token, role?, vendorType? }` — `role` required only when creating a brand-new account |
 | POST | `/auth/refresh` | Public (needs refresh token via cookie or body) | `{ refreshToken? }` |
@@ -40,6 +40,7 @@ Auth: send `Authorization: Bearer <accessToken>` on protected routes. The refres
 
 Notes:
 - Registration issues **no tokens** — the account must verify its email, then call `/auth/login`.
+- Every newly created VENDOR account receives a one-time 100-credit joining bonus with an audited wallet ledger entry (local and Google signup).
 - Login on an unverified account auto-sends a fresh OTP and returns `403 EMAIL_NOT_VERIFIED`.
 - Login/resend/forgot-password never reveal whether an account exists (anti-enumeration).
 - `role` on register is `CLIENT` or `VENDOR` only — `ADMIN`/`SUPER_ADMIN` accounts are created via `/super-admin/admins`.
@@ -56,6 +57,31 @@ Notes:
 
 ---
 
+## Global Leads — `/leads`
+
+| Method | Path | Auth | Body |
+|---|---|---|---|
+| POST | `/leads` | Public; optional CLIENT bearer links ownership | `{ categoryId, serviceId, firstName, lastName?, email, phone, country?, state?, city?, message?, metadata? }` |
+
+New global leads are always created as `PENDING`; public callers cannot set status, price, type, or vendor assignment.
+
+---
+
+## Subscription Plans — `/subscription-plans`
+
+| Method | Path | Auth | Notes |
+|---|---|---|---|
+| GET | `/subscription-plans` | Public | Lists ACTIVE purchasable plans only |
+| GET | `/subscription-plans/:planId` | Public | Active plan detail and allowed categories |
+
+## Public Service Listings — `/service-listings`
+
+| Method | Path | Auth | Notes |
+|---|---|---|---|
+| GET | `/service-listings` | Public | Only published listings backed by a currently active subscription and allowed category |
+
+---
+
 ## Vendor — `/vendor` (Bearer, role: VENDOR)
 
 | Method | Path | Body |
@@ -68,6 +94,21 @@ Notes:
 | POST | `/vendor/kyc/verify/cin` | `{ number }` — format-only |
 | POST | `/vendor/kyc/verify/aadhaar/initiate` | `{ number }` — returns a DigiLocker redirect URL + `sessionId` |
 | POST | `/vendor/kyc/verify/aadhaar/complete` | `{ sessionId }` |
+| GET | `/vendor/offerings` | — |
+| PUT | `/vendor/offerings` | `{ categoryIds: string[] }`; global leads match these categories |
+| GET | `/vendor/leads/marketplace` | Query: `categoryId?, serviceId?, take?, skip?` |
+| GET | `/vendor/leads/marketplace/:leadId` | Masked unless already purchased |
+| POST | `/vendor/leads/:leadId/purchase` | Atomically spends credits and unlocks contact data |
+| GET | `/vendor/leads/purchased` | Query: `take?, skip?` |
+| GET | `/vendor/leads/purchased/:leadId` | Full contact data for owning purchaser |
+| GET | `/vendor/credits` | Current balance and latest 50 ledger entries |
+| POST | `/vendor/subscriptions/checkout` | `{ planId, autoRenew? }`; creates PENDING_PAYMENT subscription and entitlement snapshots |
+| GET | `/vendor/subscriptions` | Vendor subscription/payment history |
+| GET | `/vendor/subscriptions/:subscriptionId` | Vendor-owned subscription detail |
+| POST | `/vendor/service-listings` | Subscription-gated `{ categoryId, serviceId?, title, description?, dynamicData?, publish? }` |
+| GET | `/vendor/service-listings` | Vendor listing dashboard |
+| PATCH | `/vendor/service-listings/:listingId` | Update listing content |
+| PATCH | `/vendor/service-listings/:listingId/publication` | `{ published }`; rechecks category and plan listing limit |
 
 ---
 
@@ -81,6 +122,11 @@ Notes:
 | POST | `/admin/vendor-kyc/:userId/reject` | `{ reason }` |
 | GET | `/admin/vendors` | Query: `kycStatus?, isActive?, search?, take?/skip? or page?/size?, sortBy?(createdAt\|updatedAt\|name), order?(asc\|desc)` |
 | GET | `/admin/vendors/:userId` | — |
+| GET | `/admin/leads` | Query: `status?, type?, categoryId?, serviceId?, take?, skip?` |
+| GET | `/admin/leads/:leadId` | — |
+| PATCH | `/admin/leads/:leadId/verify` | —; `PENDING -> VERIFIED` |
+| PATCH | `/admin/leads/:leadId/activate` | `{ creditCost, expiresAt? }`; `VERIFIED -> ACTIVE` |
+| PATCH | `/admin/leads/:leadId/reject` | `{ reason }`; pending/verified only |
 
 ---
 
@@ -92,6 +138,15 @@ Notes:
 | POST | `/super-admin/admins` | `{ firstName, lastName, email, phone, password }` — creates a pre-verified ADMIN account |
 | POST | `/super-admin/vendors/:userId/activate` | `{ reason? }` |
 | POST | `/super-admin/vendors/:userId/deactivate` | `{ reason }` (required) |
+| POST | `/super-admin/vendors/:userId/credits/adjust` | `{ amount, reason }`; audited positive/negative adjustment |
+| POST | `/super-admin/subscription-plans` | Create a dynamic DRAFT plan with category IDs and entitlement limits |
+| GET | `/super-admin/subscription-plans` | All plans including draft/inactive/archived |
+| GET | `/super-admin/subscription-plans/:planId` | Plan detail |
+| PATCH | `/super-admin/subscription-plans/:planId` | Edit DRAFT or INACTIVE plan |
+| POST | `/super-admin/subscription-plans/:planId/activate` | Make plan purchasable |
+| POST | `/super-admin/subscription-plans/:planId/deactivate` | Stop new purchases; active vendor snapshots remain valid |
+| POST | `/super-admin/subscription-plans/:planId/archive` | Permanently retire from new sales |
+| POST | `/super-admin/subscriptions/:subscriptionId/confirm-payment` | `{ providerPaymentId, provider? }`; manual verified-payment activation until gateway webhook is integrated |
 
 ---
 

@@ -1,13 +1,21 @@
 model VendorProfile {
-  userId     String     @id
-  vendorType VendorType @default(TRAVEL_AGENT)
-  kycStatus  KycStatus  @default(PENDING)
-  createdAt  DateTime   @default(now())
-  updatedAt  DateTime   @updatedAt
+  userId        String     @id
+  vendorType    VendorType @default(CONSULTANCY)
+  kycStatus     KycStatus  @default(PENDING)
+  creditBalance Int        @default(0)
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
 
-  user      User                @relation(fields: [userId], references: [id], onDelete: Cascade)
-  kyc       VendorKyc?
-  documents VendorKycDocument[]
+  user               User                      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  kyc                VendorKyc?
+  documents          VendorKycDocument[]
+  categoryOfferings  VendorCategoryOffering[]
+  serviceOfferings   VendorServiceOffering[]
+  leadPurchases      LeadPurchase[]
+  directLeads        Lead[]                    @relation("DirectLeadVendor")
+  creditTransactions VendorCreditTransaction[]
+  subscriptions      VendorSubscription[]
+  serviceListings    VendorServiceListing[]
 
   @@index([kycStatus])
   @@index([vendorType])

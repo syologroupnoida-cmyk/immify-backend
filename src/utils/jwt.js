@@ -4,14 +4,14 @@ import { env } from '../config/env.js';
 
 const ACCESS_OPTIONS = {
   expiresIn: env.JWT_ACCESS_EXPIRES_IN,
-  issuer: 'emmify-api',
-  audience: 'emmify-clients',
+  issuer: 'immify-api',
+  audience: 'immify-clients',
 };
 
 const REFRESH_OPTIONS = {
   expiresIn: env.JWT_REFRESH_EXPIRES_IN,
-  issuer: 'emmify-api',
-  audience: 'emmify-clients',
+  issuer: 'immify-api',
+  audience: 'immify-clients',
 };
 
 export const signAccessToken = (payload) => {
@@ -56,8 +56,8 @@ export const hashToken = (token) => {
 
 const RESET_TOKEN_OPTIONS = {
   expiresIn: '10m',
-  issuer: 'emmify-api',
-  audience: 'emmify-clients',
+  issuer: 'Immify-api',
+  audience: 'Immify-clients',
 };
 
 const RESET_TOKEN_PURPOSE = 'PASSWORD_RESET';

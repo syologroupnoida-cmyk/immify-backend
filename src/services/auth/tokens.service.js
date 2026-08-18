@@ -80,7 +80,7 @@ export const refreshTokens = async (incomingRefreshToken) => {
 
   const payloadUser =
     user.role === 'VENDOR'
-      ? { ...user, vendorType: vendorProfile?.vendorType ?? 'TRAVEL_AGENT' }
+      ? { ...user, vendorType: vendorProfile?.vendorType ?? 'CONSULTANCY' }
       : user;
 
   const newAccessToken = signAccessToken(buildAccessPayload(payloadUser));

@@ -1,0 +1,2368 @@
+{
+  "info": {
+    "_postman_id": "e8f2a6b4-4c1a-4e2d-9c1a-Immify00api1",
+    "name": "Immify API",
+    "description": "Auth + RBAC + Vendor KYC + Service Catalog + Global Lead Marketplace backend. Import with the Immify API - Local environment. Requests auto-save tokens and entity IDs where useful.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{accessToken}}",
+        "type": "string"
+      }
+    ]
+  },
+  "event": [],
+  "variable": [],
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Health check",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "health"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register (Client)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code < 300) {",
+                  "  const json = pm.response.json();",
+                  "  const data = json.data || {};",
+                  "  if (data.user && data.user.id) pm.environment.set('userId', data.user.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"Test\",\n  \"lastName\": \"Client\",\n  \"email\": \"{{clientEmail}}\",\n  \"phone\": \"9812345601\",\n  \"password\": \"Passw0rd123\",\n  \"role\": \"CLIENT\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "register"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Register (Vendor)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code < 300) {",
+                  "  const json = pm.response.json();",
+                  "  const data = json.data || {};",
+                  "  if (data.user && data.user.id) pm.environment.set('vendorUserId', data.user.id);",
+                  "  pm.test('Vendor receives 100 joining credits', () => pm.expect(data.joiningBonusCredits).to.eql(100));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"Test\",\n  \"lastName\": \"Vendor\",\n  \"email\": \"{{vendorEmail}}\",\n  \"phone\": \"9812345602\",\n  \"password\": \"Passw0rd123\",\n  \"role\": \"VENDOR\",\n  \"vendorType\": \"CONSULTANCY\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "register"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code < 300) {",
+                  "  const json = pm.response.json();",
+                  "  const data = json.data || {};",
+                  "  if (data.accessToken) pm.environment.set('accessToken', data.accessToken);",
+                  "  if (data.refreshToken) pm.environment.set('refreshToken', data.refreshToken);",
+                  "  const roleMap = { SUPER_ADMIN: 'superAdminAccessToken', ADMIN: 'adminAccessToken', VENDOR: 'vendorAccessToken', CLIENT: 'clientAccessToken' };",
+                  "  if (data.user && roleMap[data.user.role] && data.accessToken) {",
+                  "    pm.environment.set(roleMap[data.user.role], data.accessToken);",
+                  "  }",
+                  "  if (data.user && data.user.id) pm.environment.set('userId', data.user.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{clientEmail}}\",\n  \"password\": \"Passw0rd123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Login (Super Admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code < 300) {",
+                  "  const json = pm.response.json();",
+                  "  const data = json.data || {};",
+                  "  if (data.accessToken) { pm.environment.set('accessToken', data.accessToken); pm.environment.set('superAdminAccessToken', data.accessToken); }",
+                  "  if (data.refreshToken) pm.environment.set('refreshToken', data.refreshToken);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{superAdminEmail}}\",\n  \"password\": \"{{superAdminPassword}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Google Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code < 300) {",
+                  "  const json = pm.response.json();",
+                  "  const data = json.data || {};",
+                  "  if (data.accessToken) pm.environment.set('accessToken', data.accessToken);",
+                  "  if (data.refreshToken) pm.environment.set('refreshToken', data.refreshToken);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"<google-id-token>\",\n  \"role\": \"CLIENT\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/google/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "google",
+                "login"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Refresh Tokens",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code < 300) {",
+                  "  const json = pm.response.json();",
+                  "  const data = json.data || {};",
+                  "  if (data.accessToken) pm.environment.set('accessToken', data.accessToken);",
+                  "  if (data.refreshToken) pm.environment.set('refreshToken', data.refreshToken);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/refresh",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "refresh"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/logout",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "logout"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Verify Email",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{clientEmail}}\",\n  \"otp\": \"123456\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/verify-email",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "verify-email"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Resend OTP",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{clientEmail}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/resend-otp",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "resend-otp"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Forgot Password (step 1/3)",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{clientEmail}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/password/forgot",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "password",
+                "forgot"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Verify Reset OTP (step 2/3)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code < 300) {",
+                  "  const json = pm.response.json();",
+                  "  const data = json.data || {};",
+                  "  if (data.resetToken) pm.environment.set('resetToken', data.resetToken);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{clientEmail}}\",\n  \"otp\": \"123456\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/password/verify-otp",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "password",
+                "verify-otp"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Reset Password (step 3/3)",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"resetToken\": \"{{resetToken}}\",\n  \"newPassword\": \"NewPassw0rd123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/password/reset",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "password",
+                "reset"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Profile (Me)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/auth/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "me"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Profile (Me)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"Updated\",\n  \"phone\": \"9812399999\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "me"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Change Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"currentPassword\": \"Passw0rd123\",\n  \"newPassword\": \"NewPassw0rd123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/change-password",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "change-password"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Uploads",
+      "item": [
+        {
+          "name": "Upload Image/Document",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": []
+                },
+                {
+                  "key": "purpose",
+                  "value": "avatar",
+                  "type": "text"
+                },
+                {
+                  "key": "name",
+                  "value": "",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/uploads/image",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "uploads",
+                "image"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Vendor",
+      "auth": {
+        "type": "bearer",
+        "bearer": [
+          {
+            "key": "token",
+            "value": "{{vendorAccessToken}}",
+            "type": "string"
+          }
+        ]
+      },
+      "item": [
+        {
+          "name": "Ping",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/vendor/ping",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "vendor",
+                "ping"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get My KYC Status",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/vendor/kyc",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "vendor",
+                "kyc"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Submit KYC",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"companyName\": \"Acme Travels\",\n  \"businessName\": \"Acme Travels Pvt Ltd\",\n  \"companyType\": \"PVT_LTD\",\n  \"companySince\": 2015,\n  \"teamSize\": 12,\n  \"country\": \"India\",\n  \"officeAddress\": \"123 MG Road\",\n  \"officeCity\": \"Bengaluru\",\n  \"officeState\": \"Karnataka\",\n  \"services\": [\"{{serviceCategoryId}}\"],\n  \"destinations\": [\"Goa\", \"Kerala\"],\n  \"dailyLeadRequirement\": 5,\n  \"profileUrl\": \"https://acmetravels.example.com\",\n  \"referralSource\": \"GOOGLE\",\n  \"marketplaceWorked\": false,\n  \"agreeTerms\": true,\n  \"declareTrue\": true,\n  \"panNumber\": \"ABCDE1234F\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/vendor/kyc",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "vendor",
+                "kyc"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Verify PAN",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"number\": \"ABCDE1234F\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/vendor/kyc/verify/pan",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "vendor",
+                "kyc",
+                "verify",
+                "pan"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Verify GSTIN",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"number\": \"29ABCDE1234F1Z5\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/vendor/kyc/verify/gstin",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "vendor",
+                "kyc",
+                "verify",
+                "gstin"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Verify CIN",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"number\": \"U12345MH2015PTC123456\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/vendor/kyc/verify/cin",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "vendor",
+                "kyc",
+                "verify",
+                "cin"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Initiate Aadhaar Verification",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code < 300) {",
+                  "  const json = pm.response.json();",
+                  "  const data = json.data || {};",
+                  "  if (data.sessionId) pm.environment.set('aadhaarSessionId', data.sessionId);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"number\": \"123456789012\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/vendor/kyc/verify/aadhaar/initiate",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "vendor",
+                "kyc",
+                "verify",
+                "aadhaar",
+                "initiate"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Complete Aadhaar Verification",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sessionId\": \"{{aadhaarSessionId}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/vendor/kyc/verify/aadhaar/complete",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "vendor",
+                "kyc",
+                "verify",
+                "aadhaar",
+                "complete"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Global Leads",
+      "description": "Public global-lead submission. The test script stores the returned lead id as {{leadId}}.",
+      "item": [
+        {
+          "name": "Create Global Lead",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Request succeeded', () => pm.expect(pm.response.code).to.be.below(300));",
+                  "if (pm.response.code < 300) {",
+                  "  const json = pm.response.json();",
+                  "  const data = json.data || {};",
+                  "  const lead = data.lead || data;",
+                  "  const items = data.items || [];",
+                  "  const id = lead.id || (items[0] && items[0].id);",
+                  "  if (id) pm.environment.set('leadId', id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"categoryId\": \"{{serviceCategoryId}}\",\n  \"serviceId\": \"{{serviceId}}\",\n  \"firstName\": \"Rahul\",\n  \"lastName\": \"Sharma\",\n  \"email\": \"rahul.lead@example.com\",\n  \"phone\": \"+919999999999\",\n  \"country\": \"India\",\n  \"state\": \"Delhi\",\n  \"city\": \"New Delhi\",\n  \"message\": \"Need consultation for this service.\",\n  \"metadata\": {\n    \"source\": \"postman\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/leads",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "leads"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin",
+      "auth": {
+        "type": "bearer",
+        "bearer": [
+          {
+            "key": "token",
+            "value": "{{adminAccessToken}}",
+            "type": "string"
+          }
+        ]
+      },
+      "item": [
+        {
+          "name": "Ping",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/ping",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "ping"
+              ]
+            }
+          }
+        },
+        {
+          "name": "List KYC Submissions",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const json = pm.response.json();",
+                  "  const items = (json.data && json.data.items) || [];",
+                  "  if (items[0] && items[0].userId) pm.environment.set('vendorUserId', items[0].userId);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/vendor-kyc?status=SUBMITTED&take=20&skip=0",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "vendor-kyc"
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "SUBMITTED"
+                },
+                {
+                  "key": "take",
+                  "value": "20"
+                },
+                {
+                  "key": "skip",
+                  "value": "0"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Approve Vendor KYC",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/vendor-kyc/{{vendorUserId}}/approve",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "vendor-kyc",
+                "{{vendorUserId}}",
+                "approve"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Reject Vendor KYC",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"Uploaded PAN image is unreadable.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/vendor-kyc/{{vendorUserId}}/reject",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "vendor-kyc",
+                "{{vendorUserId}}",
+                "reject"
+              ]
+            }
+          }
+        },
+        {
+          "name": "List Vendors",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const json = pm.response.json();",
+                  "  const items = (json.data && json.data.items) || [];",
+                  "  if (items[0] && items[0].userId) pm.environment.set('vendorUserId', items[0].userId);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/vendors?page=0&size=20",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "vendors"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "20"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Vendor Detail",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/vendors/{{vendorUserId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "vendors",
+                "{{vendorUserId}}"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin - Leads",
+      "auth": {
+        "type": "bearer",
+        "bearer": [
+          {
+            "key": "token",
+            "value": "{{adminAccessToken}}",
+            "type": "string"
+          }
+        ]
+      },
+      "item": [
+        {
+          "name": "List Leads",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Request succeeded', () => pm.expect(pm.response.code).to.be.below(300));",
+                  "if (pm.response.code < 300) {",
+                  "  const json = pm.response.json();",
+                  "  const data = json.data || {};",
+                  "  const lead = data.lead || data;",
+                  "  const items = data.items || [];",
+                  "  const id = lead.id || (items[0] && items[0].id);",
+                  "  if (id) pm.environment.set('leadId', id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/leads?status=PENDING&take=20&skip=0",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "leads"
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "PENDING"
+                },
+                {
+                  "key": "take",
+                  "value": "20"
+                },
+                {
+                  "key": "skip",
+                  "value": "0"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Lead Detail",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/leads/{{leadId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "leads",
+                "{{leadId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Verify Lead",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/leads/{{leadId}}/verify",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "leads",
+                "{{leadId}}",
+                "verify"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Activate and Price Lead",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"creditCost\": 15\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/leads/{{leadId}}/activate",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "leads",
+                "{{leadId}}",
+                "activate"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Reject Lead",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"Lead contact details could not be verified.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/leads/{{leadId}}/reject",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "leads",
+                "{{leadId}}",
+                "reject"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Vendor - Lead Marketplace",
+      "auth": {
+        "type": "bearer",
+        "bearer": [
+          {
+            "key": "token",
+            "value": "{{vendorAccessToken}}",
+            "type": "string"
+          }
+        ]
+      },
+      "item": [
+        {
+          "name": "Get Vendor Offerings",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/vendor/offerings",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "vendor",
+                "offerings"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Replace Vendor Offerings",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"categoryIds\": [\n    \"{{serviceCategoryId}}\"\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/vendor/offerings",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "vendor",
+                "offerings"
+              ]
+            }
+          }
+        },
+        {
+          "name": "List Matched Marketplace Leads",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Request succeeded', () => pm.expect(pm.response.code).to.be.below(300));",
+                  "if (pm.response.code < 300) {",
+                  "  const json = pm.response.json();",
+                  "  const data = json.data || {};",
+                  "  const lead = data.lead || data;",
+                  "  const items = data.items || [];",
+                  "  const id = lead.id || (items[0] && items[0].id);",
+                  "  if (id) pm.environment.set('leadId', id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/vendor/leads/marketplace?take=20&skip=0",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "vendor",
+                "leads",
+                "marketplace"
+              ],
+              "query": [
+                {
+                  "key": "take",
+                  "value": "20"
+                },
+                {
+                  "key": "skip",
+                  "value": "0"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Marketplace Lead (Masked)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/vendor/leads/marketplace/{{leadId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "vendor",
+                "leads",
+                "marketplace",
+                "{{leadId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Purchase and Unlock Lead",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Lead unlocked', () => pm.expect(pm.response.code).to.be.oneOf([200, 201]));",
+                  "if (pm.response.code < 300) { const data = pm.response.json().data || {}; if (data.purchaseId) pm.environment.set('leadPurchaseId', data.purchaseId); }"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/vendor/leads/{{leadId}}/purchase",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "vendor",
+                "leads",
+                "{{leadId}}",
+                "purchase"
+              ]
+            }
+          }
+        },
+        {
+          "name": "List Purchased Leads",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/vendor/leads/purchased?take=20&skip=0",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "vendor",
+                "leads",
+                "purchased"
+              ],
+              "query": [
+                {
+                  "key": "take",
+                  "value": "20"
+                },
+                {
+                  "key": "skip",
+                  "value": "0"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Purchased Lead (Unmasked)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/vendor/leads/purchased/{{leadId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "vendor",
+                "leads",
+                "purchased",
+                "{{leadId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Credit Wallet",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/vendor/credits",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "vendor",
+                "credits"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Super Admin",
+      "auth": {
+        "type": "bearer",
+        "bearer": [
+          {
+            "key": "token",
+            "value": "{{superAdminAccessToken}}",
+            "type": "string"
+          }
+        ]
+      },
+      "item": [
+        {
+          "name": "Ping",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/super-admin/ping",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "super-admin",
+                "ping"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Admin",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"New\",\n  \"lastName\": \"Admin\",\n  \"email\": \"{{newAdminEmail}}\",\n  \"phone\": \"9812345699\",\n  \"password\": \"Passw0rd123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/super-admin/admins",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "super-admin",
+                "admins"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Activate Vendor",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"Re-enabled after review.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/super-admin/vendors/{{vendorUserId}}/activate",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "super-admin",
+                "vendors",
+                "{{vendorUserId}}",
+                "activate"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Deactivate Vendor",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"Policy violation reported by a customer.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/super-admin/vendors/{{vendorUserId}}/deactivate",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "super-admin",
+                "vendors",
+                "{{vendorUserId}}",
+                "deactivate"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Adjust Vendor Credits",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 100,\n  \"reason\": \"Initial marketplace credit allocation.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/super-admin/vendors/{{vendorUserId}}/credits/adjust",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "super-admin",
+                "vendors",
+                "{{vendorUserId}}",
+                "credits",
+                "adjust"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Super Admin - Service Categories",
+      "auth": {
+        "type": "bearer",
+        "bearer": [
+          {
+            "key": "token",
+            "value": "{{superAdminAccessToken}}",
+            "type": "string"
+          }
+        ]
+      },
+      "item": [
+        {
+          "name": "Create Service Category (with services)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code < 300) {",
+                  "  const json = pm.response.json();",
+                  "  const data = json.data || {};",
+                  "  if (data.id) pm.environment.set('serviceCategoryId', data.id);",
+                  "  if (data.services && data.services[0] && data.services[0].id) {",
+                  "    pm.environment.set('serviceId', data.services[0].id);",
+                  "  }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Immigration Services\",\n  \"description\": \"PR, Express Entry, Citizenship, Residency\",\n  \"services\": [\n    { \"name\": \"PR\" },\n    { \"name\": \"Express Entry\" },\n    { \"name\": \"Citizenship\" },\n    { \"name\": \"Residency\" }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/super-admin/service-categories",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "super-admin",
+                "service-categories"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Service Category (no services)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"International Services\",\n  \"description\": \"\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/super-admin/service-categories",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "super-admin",
+                "service-categories"
+              ]
+            }
+          }
+        },
+        {
+          "name": "List Service Categories",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/super-admin/service-categories",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "super-admin",
+                "service-categories"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Service Category",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/super-admin/service-categories/{{serviceCategoryId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "super-admin",
+                "service-categories",
+                "{{serviceCategoryId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Service Category",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"description\": \"Updated category description.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/super-admin/service-categories/{{serviceCategoryId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "super-admin",
+                "service-categories",
+                "{{serviceCategoryId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Add Service to Category",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code < 300) {",
+                  "  const json = pm.response.json();",
+                  "  const data = json.data || {};",
+                  "  if (data.id) pm.environment.set('serviceId', data.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Citizenship by Investment\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/super-admin/service-categories/{{serviceCategoryId}}/services",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "super-admin",
+                "service-categories",
+                "{{serviceCategoryId}}",
+                "services"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Service",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"isActive\": false\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/super-admin/services/{{serviceId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "super-admin",
+                "services",
+                "{{serviceId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete Service",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/super-admin/services/{{serviceId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "super-admin",
+                "services",
+                "{{serviceId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete Service Category",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/super-admin/service-categories/{{serviceCategoryId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "super-admin",
+                "service-categories",
+                "{{serviceCategoryId}}"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Public - Subscriptions & Listings",
+      "item": [
+        {
+          "name": "List Active Subscription Plans",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/subscription-plans",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "subscription-plans"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          }
+        },
+        {
+          "name": "Get Active Subscription Plan",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/subscription-plans/{{subscriptionPlanId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "subscription-plans",
+                "{{subscriptionPlanId}}"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          }
+        },
+        {
+          "name": "List Public Vendor Services",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/service-listings",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "service-listings"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Super Admin - Subscription Plans",
+      "auth": {
+        "type": "bearer",
+        "bearer": [
+          {
+            "key": "token",
+            "value": "{{superAdminAccessToken}}",
+            "type": "string"
+          }
+        ]
+      },
+      "item": [
+        {
+          "name": "Create Draft Subscription Plan",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code < 300) {",
+                  "  const data=pm.response.json().data; const value=data && data.id;",
+                  "  if (value) pm.environment.set('subscriptionPlanId', value);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Gold Dynamic\",\n  \"description\": \"Immigration consultants plan\",\n  \"priceInPaise\": 500000,\n  \"currency\": \"INR\",\n  \"billingPeriod\": \"MONTHLY\",\n  \"durationDays\": 30,\n  \"maxPublicServices\": 10,\n  \"maxJobPosts\": 10,\n  \"jobPortalAccess\": true,\n  \"directLeadCreditPrice\": 10,\n  \"displayOrder\": 2,\n  \"isFeatured\": true,\n  \"categoryIds\": [\n    \"{{serviceCategoryId}}\"\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/super-admin/subscription-plans",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "super-admin",
+                "subscription-plans"
+              ]
+            }
+          }
+        },
+        {
+          "name": "List All Subscription Plans",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/super-admin/subscription-plans",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "super-admin",
+                "subscription-plans"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Subscription Plan",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/super-admin/subscription-plans/{{subscriptionPlanId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "super-admin",
+                "subscription-plans",
+                "{{subscriptionPlanId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Draft Subscription Plan",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"description\": \"Updated dynamic plan description.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/super-admin/subscription-plans/{{subscriptionPlanId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "super-admin",
+                "subscription-plans",
+                "{{subscriptionPlanId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Activate Subscription Plan",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/super-admin/subscription-plans/{{subscriptionPlanId}}/activate",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "super-admin",
+                "subscription-plans",
+                "{{subscriptionPlanId}}",
+                "activate"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Deactivate Subscription Plan",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/super-admin/subscription-plans/{{subscriptionPlanId}}/deactivate",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "super-admin",
+                "subscription-plans",
+                "{{subscriptionPlanId}}",
+                "deactivate"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Archive Subscription Plan",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/super-admin/subscription-plans/{{subscriptionPlanId}}/archive",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "super-admin",
+                "subscription-plans",
+                "{{subscriptionPlanId}}",
+                "archive"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Confirm Subscription Payment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"providerPaymentId\": \"manual-payment-001\",\n  \"provider\": \"MANUAL\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/super-admin/subscriptions/{{vendorSubscriptionId}}/confirm-payment",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "super-admin",
+                "subscriptions",
+                "{{vendorSubscriptionId}}",
+                "confirm-payment"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Vendor - Subscriptions & Service Listings",
+      "auth": {
+        "type": "bearer",
+        "bearer": [
+          {
+            "key": "token",
+            "value": "{{vendorAccessToken}}",
+            "type": "string"
+          }
+        ]
+      },
+      "item": [
+        {
+          "name": "Create Subscription Checkout",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code < 300) {",
+                  "  const data=pm.response.json().data; const value=data && data.subscription && data.subscription.id;",
+                  "  if (value) pm.environment.set('vendorSubscriptionId', value);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"planId\": \"{{subscriptionPlanId}}\",\n  \"autoRenew\": false\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/vendor/subscriptions/checkout",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "vendor",
+                "subscriptions",
+                "checkout"
+              ]
+            }
+          }
+        },
+        {
+          "name": "List My Subscriptions",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/vendor/subscriptions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "vendor",
+                "subscriptions"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get My Subscription",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/vendor/subscriptions/{{vendorSubscriptionId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "vendor",
+                "subscriptions",
+                "{{vendorSubscriptionId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Published Service Listing",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code < 300) {",
+                  "  const data=pm.response.json().data; const value=data && data.id;",
+                  "  if (value) pm.environment.set('serviceListingId', value);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"categoryId\": \"{{serviceCategoryId}}\",\n  \"serviceId\": \"{{serviceId}}\",\n  \"title\": \"Express Entry Consultation\",\n  \"description\": \"Professional immigration consultation.\",\n  \"dynamicData\": {\n    \"country\": \"Canada\"\n  },\n  \"publish\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/vendor/service-listings",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "vendor",
+                "service-listings"
+              ]
+            }
+          }
+        },
+        {
+          "name": "List My Service Listings",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/vendor/service-listings",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "vendor",
+                "service-listings"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Service Listing",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Premium Express Entry Consultation\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/vendor/service-listings/{{serviceListingId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "vendor",
+                "service-listings",
+                "{{serviceListingId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Unpublish Service Listing",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"published\": false\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/vendor/service-listings/{{serviceListingId}}/publication",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "vendor",
+                "service-listings",
+                "{{serviceListingId}}",
+                "publication"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Publish Service Listing",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"published\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/vendor/service-listings/{{serviceListingId}}/publication",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "vendor",
+                "service-listings",
+                "{{serviceListingId}}",
+                "publication"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

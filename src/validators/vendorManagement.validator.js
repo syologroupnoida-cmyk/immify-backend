@@ -77,3 +77,12 @@ export const deactivateVendorSchema = z
     reason: trimmedRequired(5, 500, 'Reason'),
   })
   .strict();
+
+export const adjustVendorCreditsSchema = z
+  .object({
+    amount: z.coerce.number().int().min(-1_000_000).max(1_000_000).refine((value) => value !== 0, {
+      message: 'Amount cannot be zero',
+    }),
+    reason: trimmedRequired(5, 500, 'Reason'),
+  })
+  .strict();

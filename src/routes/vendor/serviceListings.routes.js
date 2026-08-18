@@ -1,0 +1,10 @@
+import { Router } from 'express';
+import { validateRequest } from '../../middlewares/validation.middleware.js';
+import { createServiceListingSchema, updateServiceListingSchema, setListingPublicationSchema } from '../../validators/subscription.validator.js';
+import * as controller from '../../controllers/subscription.controller.js';
+const router = Router();
+router.post('/', validateRequest(createServiceListingSchema), controller.createListing);
+router.get('/', controller.listMyListings);
+router.patch('/:listingId', validateRequest(updateServiceListingSchema), controller.updateListing);
+router.patch('/:listingId/publication', validateRequest(setListingPublicationSchema), controller.setListingPublication);
+export default router;

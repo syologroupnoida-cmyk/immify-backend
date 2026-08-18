@@ -13,7 +13,7 @@ export const UPLOAD_PURPOSES = [
 ];
 
 // Optional `name` — when provided, the file is stored at
-//   emmify/<purpose>/<userId>/<name>
+//   Immify/<purpose>/<userId>/<name>
 // (with the extension chosen automatically by Cloudinary). Useful for
 // "logical" identifiers like "pan-card" or "company-logo" so the file can be
 // re-uploaded under the same slot (overwrites the previous version).

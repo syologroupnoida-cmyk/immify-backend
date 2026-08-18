@@ -1,0 +1,84 @@
+model Lead {
+  id                 String     @id @default(uuid())
+  type               LeadType   @default(GLOBAL)
+  status             LeadStatus @default(PENDING)
+  clientUserId       String?
+  categoryId         String
+  serviceId          String
+  directVendorUserId String?
+  serviceListingId   String?
+
+  firstName String
+  lastName  String?
+  email     String
+  phone     String
+  country   String?
+  state     String?
+  city      String?
+  message   String?
+  metadata  Json?
+
+  creditCost        Int?
+  reviewedByAdminId String?
+  reviewedAt        DateTime?
+  activatedAt       DateTime?
+  rejectedAt        DateTime?
+  rejectionReason   String?
+  expiresAt         DateTime?
+  closedAt          DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  client          User?                 @relation("LeadClient", fields: [clientUserId], references: [id], onDelete: SetNull)
+  reviewedByAdmin User?                 @relation("LeadReviewer", fields: [reviewedByAdminId], references: [id], onDelete: SetNull)
+  category        ServiceCategory       @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  service         Service               @relation(fields: [serviceId], references: [id], onDelete: Restrict)
+  directVendor    VendorProfile?        @relation("DirectLeadVendor", fields: [directVendorUserId], references: [userId], onDelete: Restrict)
+  purchases       LeadPurchase[]
+  serviceListing  VendorServiceListing? @relation(fields: [serviceListingId], references: [id], onDelete: Restrict)
+
+  @@index([type, status, categoryId, createdAt])
+  @@index([type, status, serviceId, createdAt])
+  @@index([directVendorUserId, status, createdAt])
+  @@index([serviceListingId, createdAt])
+  @@index([clientUserId, createdAt])
+  @@index([expiresAt])
+  @@map("leads")
+}
+
+model LeadPurchase {
+  id           String             @id @default(uuid())
+  leadId       String
+  vendorUserId String
+  creditsSpent Int
+  status       LeadPurchaseStatus @default(COMPLETED)
+  purchasedAt  DateTime           @default(now())
+  refundedAt   DateTime?
+
+  lead              Lead                     @relation(fields: [leadId], references: [id], onDelete: Restrict)
+  vendor            VendorProfile            @relation(fields: [vendorUserId], references: [userId], onDelete: Restrict)
+  creditTransaction VendorCreditTransaction?
+
+  @@unique([leadId, vendorUserId])
+  @@index([vendorUserId, purchasedAt])
+  @@index([leadId, status])
+  @@map("lead_purchases")
+}
+
+model VendorCreditTransaction {
+  id             String                @id @default(uuid())
+  vendorUserId   String
+  leadPurchaseId String?               @unique
+  type           CreditTransactionType
+  amount         Int
+  balanceAfter   Int
+  description    String?
+  metadata       Json?
+  createdAt      DateTime              @default(now())
+
+  vendor       VendorProfile @relation(fields: [vendorUserId], references: [userId], onDelete: Restrict)
+  leadPurchase LeadPurchase? @relation(fields: [leadPurchaseId], references: [id], onDelete: Restrict)
+
+  @@index([vendorUserId, createdAt])
+  @@map("vendor_credit_transactions")
+}

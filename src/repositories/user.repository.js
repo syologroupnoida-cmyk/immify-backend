@@ -15,6 +15,21 @@ const PUBLIC_USER_SELECT = {
   createdAt: true,
 };
 
+export const VENDOR_JOINING_BONUS_CREDITS = 100;
+
+const joiningBonusProfile = (vendorType) => ({
+  vendorType,
+  creditBalance: VENDOR_JOINING_BONUS_CREDITS,
+  creditTransactions: {
+    create: {
+      type: 'JOINING_BONUS',
+      amount: VENDOR_JOINING_BONUS_CREDITS,
+      balanceAfter: VENDOR_JOINING_BONUS_CREDITS,
+      description: 'Free vendor joining bonus.',
+    },
+  },
+});
+
 export const createCustomer = async ({ firstName, lastName, email, phone, password }) => {
   return createUserWithGeneratedId('CLIENT', ({ id }) =>
     prisma.user.create({
@@ -40,7 +55,7 @@ export const createAgent = async ({
   email,
   phone,
   password,
-  vendorType = 'TRAVEL_AGENT', // Default keeps existing signup flow working.
+  vendorType = 'CONSULTANCY', // Default keeps existing signup flow working.
 }) => {
   return createUserWithGeneratedId('VENDOR', ({ id }) =>
     prisma.user.create({
@@ -53,9 +68,9 @@ export const createAgent = async ({
         password,
         role: 'VENDOR',
         authProvider: 'LOCAL',
-        // VendorProfile carries the business type (TRAVEL_AGENT / PROPERTY_OWNER / ...)
-        // + kycStatus = PENDING; vendor submits KYC separately.
-        vendorProfile: { create: { vendorType } },
+        // VendorProfile carries vendorType (currently a single CONSULTANCY value —
+        // see enums.prisma) + kycStatus = PENDING; vendor submits KYC separately.
+        vendorProfile: { create: joiningBonusProfile(vendorType) },
       },
       select: PUBLIC_USER_SELECT,
     }),
@@ -117,7 +132,7 @@ export const createAgentViaGoogle = async ({
   email,
   googleId,
   avatarUrl,
-  vendorType = 'TRAVEL_AGENT',
+  vendorType = 'CONSULTANCY',
 }) => {
   return createUserWithGeneratedId('VENDOR', ({ id }) =>
     prisma.user.create({
@@ -132,7 +147,7 @@ export const createAgentViaGoogle = async ({
         authProvider: 'GOOGLE',
         emailVerifiedAt: new Date(),
         // KYC still required — vendorProfile.kycStatus defaults to PENDING.
-        vendorProfile: { create: { vendorType } },
+        vendorProfile: { create: joiningBonusProfile(vendorType) },
       },
       select: PUBLIC_USER_SELECT,
     }),

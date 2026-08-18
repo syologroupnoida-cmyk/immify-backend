@@ -54,9 +54,67 @@ enum KycDocumentType {
 }
 
 // Business type for a VENDOR user. Base `UserRole` stays small (SUPER_ADMIN,
-// ADMIN, VENDOR, CLIENT) — this enum grows over time as new vendor business
-// categories are added.
+// ADMIN, VENDOR, CLIENT). What a vendor actually offers (Immigration, Visa,
+// Study Abroad, ...) is captured per-vendor via ServiceCategory selection on
+// their KYC — NOT here. This stays a single value unless a genuinely
+// structural difference between vendor kinds shows up later (different KYC
+// wizard, different dashboard, different route access).
 enum VendorType {
-  TRAVEL_AGENT
-  PROPERTY_OWNER
+  CONSULTANCY
+}
+
+enum LeadType {
+  GLOBAL
+  DIRECT
+}
+
+enum LeadStatus {
+  PENDING
+  VERIFIED
+  ACTIVE
+  REJECTED
+  EXPIRED
+  CLOSED
+}
+
+enum LeadPurchaseStatus {
+  COMPLETED
+  REFUNDED
+}
+
+enum CreditTransactionType {
+  PURCHASE
+  LEAD_UNLOCK
+  REFUND
+  ADMIN_ADJUSTMENT
+  JOINING_BONUS
+}
+
+enum SubscriptionPlanStatus {
+  DRAFT
+  ACTIVE
+  INACTIVE
+  ARCHIVED
+}
+
+enum VendorSubscriptionStatus {
+  PENDING_PAYMENT
+  ACTIVE
+  EXPIRED
+  CANCELLED
+  PAYMENT_FAILED
+}
+
+enum SubscriptionPaymentStatus {
+  CREATED
+  PAID
+  FAILED
+  REFUNDED
+}
+
+enum SubscriptionBillingPeriod {
+  MONTHLY
+  QUARTERLY
+  HALF_YEARLY
+  YEARLY
 }

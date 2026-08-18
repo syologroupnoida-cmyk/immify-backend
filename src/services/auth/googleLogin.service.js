@@ -64,7 +64,7 @@ export const loginWithGoogle = async ({ token, role, vendorType }) => {
 
     user = await createUserForRole({
       role,
-      vendorType, // Optional — defaults to TRAVEL_AGENT inside the repo layer.
+      vendorType, // Optional — defaults to CONSULTANCY inside the repo layer.
       identity: {
         firstName: identity.firstName,
         lastName: identity.lastName,

@@ -20,6 +20,8 @@ model User {
   emailOtps       EmailOtp[]
   vendorProfile   VendorProfile?
   customerProfile CustomerProfile?
+  createdLeads    Lead[]           @relation("LeadClient")
+  reviewedLeads   Lead[]           @relation("LeadReviewer")
 
   @@index([role])
   @@map("users")

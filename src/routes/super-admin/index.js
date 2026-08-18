@@ -4,6 +4,7 @@ import superAdminRoutes from './superAdmin.routes.js';
 import vendorsRoutes from './vendors.routes.js';
 import serviceCategoriesRoutes from './serviceCategories.routes.js';
 import servicesRoutes from './services.routes.js';
+import subscriptionPlansRoutes from './subscriptionPlans.routes.js';
 
 const router = Router();
 
@@ -14,5 +15,6 @@ router.use('/', superAdminRoutes);
 router.use('/vendors', vendorsRoutes);
 router.use('/service-categories', serviceCategoriesRoutes);
 router.use('/services', servicesRoutes);
+router.use('/subscription-plans', subscriptionPlansRoutes);
 
 export default router;

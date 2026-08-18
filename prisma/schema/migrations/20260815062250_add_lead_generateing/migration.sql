@@ -1,0 +1,2 @@
+-- RenameIndex
+ALTER INDEX "vendor_service_offerings_vendorUserId_isPubliclyListed_isActive" RENAME TO "vendor_service_offerings_vendorUserId_isPubliclyListed_isAc_idx";

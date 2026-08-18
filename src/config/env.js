@@ -43,11 +43,11 @@ const envSchema = z
     CORS_ORIGIN: z.string().default("*"),
 
     // ---- Frontend URL ----
-    // Base URL of the public Emmify frontend. Used inside transactional emails
+    // Base URL of the public Immify frontend. Used inside transactional emails
     // to build "Login Now" / "Resubmit" buttons that link the user back into
     // the app. Override per environment via .env:
-    //   FRONTEND_URL=https://emmify.in           # production
-    //   FRONTEND_URL=https://staging.emmify.in    # staging
+    //   FRONTEND_URL=https://Immify.in           # production
+    //   FRONTEND_URL=https://staging.Immify.in    # staging
     //   FRONTEND_URL=http://localhost:3000       # local frontend dev
     FRONTEND_URL: z
       .string()
@@ -63,7 +63,7 @@ const envSchema = z
       .default("false"),
     SMTP_USER: z.string({ required_error: "SMTP_USER is required" }).min(1),
     SMTP_PASS: z.string({ required_error: "SMTP_PASS is required" }).min(1),
-    MAIL_FROM_NAME: z.string().default("Emmify"),
+    MAIL_FROM_NAME: z.string().default("Immify"),
     MAIL_FROM_ADDRESS: z
       .string({ required_error: "MAIL_FROM_ADDRESS is required" })
       .email("MAIL_FROM_ADDRESS must be a valid email"),
@@ -111,9 +111,9 @@ const envSchema = z
       .default("https://kyc-api.surepass.io/api/v1"),
     SUREPASS_TIMEOUT_MS: z.coerce.number().int().positive().default(15_000),
 
-    // Public Emmify frontend URL where DigiLocker will redirect the user
+    // Public Immify frontend URL where DigiLocker will redirect the user
     // after they finish Aadhaar verification. Must be HTTPS (Surepass
-    // rejects http://). Example: https://emmify.in/kyc/aadhaar-callback
+    // rejects http://). Example: https://Immify.in/kyc/aadhaar-callback
     // Falls back to the Surepass console URL when unset (only useful for
     // dashboard testing — set this for real users).
     SUREPASS_REDIRECT_URL: z

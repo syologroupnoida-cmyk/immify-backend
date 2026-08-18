@@ -1,0 +1,9 @@
+import { Router } from 'express';
+import { validateRequest } from '../../middlewares/validation.middleware.js';
+import { checkoutSubscriptionSchema } from '../../validators/subscription.validator.js';
+import * as controller from '../../controllers/subscription.controller.js';
+const router = Router();
+router.post('/checkout', validateRequest(checkoutSubscriptionSchema), controller.checkout);
+router.get('/', controller.listMySubscriptions);
+router.get('/:subscriptionId', controller.getMySubscription);
+export default router;

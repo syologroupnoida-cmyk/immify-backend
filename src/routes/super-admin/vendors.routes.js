@@ -3,8 +3,10 @@ import { validateRequest } from '../../middlewares/validation.middleware.js';
 import * as vendorMgmtController from '../../controllers/vendorManagement.controller.js';
 import {
   activateVendorSchema,
+  adjustVendorCreditsSchema,
   deactivateVendorSchema,
 } from '../../validators/vendorManagement.validator.js';
+import * as leadController from '../../controllers/lead.controller.js';
 
 // Vendor management — WRITE endpoints (SUPER_ADMIN only).
 // Role gate already applied at routes/super-admin/index.js. Mounted under /vendors.
@@ -23,6 +25,12 @@ router.post(
   '/:userId/deactivate',
   validateRequest(deactivateVendorSchema),
   vendorMgmtController.deactivateVendor,
+);
+
+router.post(
+  '/:userId/credits/adjust',
+  validateRequest(adjustVendorCreditsSchema),
+  leadController.adjustVendorCredits,
 );
 
 export default router;

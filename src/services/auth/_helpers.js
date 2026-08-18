@@ -84,12 +84,13 @@ export const sanitizeUser = (user, { vendorProfile } = {}) => {
 
   if (user.role === 'VENDOR') {
     const kycStatus = vendorProfile?.kycStatus ?? 'NOT_SUBMITTED';
-    const vendorType = vendorProfile?.vendorType ?? 'TRAVEL_AGENT';
+    const vendorType = vendorProfile?.vendorType ?? 'CONSULTANCY';
     // Top-level convenience for the frontend router (avoids nested lookup).
     base.vendorType = vendorType;
     base.vendorProfile = {
       vendorType,
       kycStatus,
+      creditBalance: vendorProfile?.creditBalance ?? 0,
       nextStep: deriveVendorNextStep(kycStatus),
     };
   }
@@ -116,7 +117,7 @@ export const issueTokenPair = async (user, { vendorProfile } = {}) => {
   // For vendors, merge vendorType into the payload user so the JWT carries it.
   const payloadUser =
     user.role === 'VENDOR'
-      ? { ...user, vendorType: vendorProfile?.vendorType ?? 'TRAVEL_AGENT' }
+      ? { ...user, vendorType: vendorProfile?.vendorType ?? 'CONSULTANCY' }
       : user;
 
   const accessToken = signAccessToken(buildAccessPayload(payloadUser));

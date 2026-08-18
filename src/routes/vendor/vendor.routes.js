@@ -46,7 +46,7 @@ router.post(
 // ---- Aadhaar — DigiLocker-backed verification ----
 // `initiate` returns a DigiLocker SDK URL; the frontend opens it. After the
 // user finishes verification on DigiLocker (UIDAI OTP happens there), they
-// are redirected back to the Emmify frontend callback page which fires
+// are redirected back to the Immify frontend callback page which fires
 // `complete` to pull the verified Aadhaar data from Surepass.
 router.post(
   '/kyc/verify/aadhaar/initiate',

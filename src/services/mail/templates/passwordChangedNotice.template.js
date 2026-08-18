@@ -1,23 +1,23 @@
 export const passwordChangedNoticeTemplate = ({ firstName, when }) => {
   const safeName = firstName || 'there';
-  const subject = 'Your Emmify password was changed';
+  const subject = 'Your Immify password was changed';
   const whenStr = (when instanceof Date ? when : new Date(when)).toUTCString();
 
   const text = [
     `Hi ${safeName},`,
     '',
-    `Your Emmify password was changed on ${whenStr}.`,
+    `Your Immify password was changed on ${whenStr}.`,
     '',
     `If this was you — no action needed.`,
     `If this was NOT you — your account may be compromised. Contact support immediately and consider resetting your password again.`,
     '',
-    '— Emmify Security',
+    '— Immify Security',
   ].join('\n');
 
   const html = `
   <div style="font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif;max-width:560px;margin:0 auto;padding:24px;color:#0f172a;">
     <h2 style="margin:0 0 16px;font-size:20px;">Password changed</h2>
-    <p style="margin:0 0 16px;font-size:14px;line-height:1.5;">Hi ${safeName}, your Emmify password was just changed.</p>
+    <p style="margin:0 0 16px;font-size:14px;line-height:1.5;">Hi ${safeName}, your Immify password was just changed.</p>
     <div style="background:#f1f5f9;padding:12px 16px;border-radius:8px;font-size:13px;color:#475569;margin:16px 0;">
       <strong>When:</strong> ${whenStr}
     </div>

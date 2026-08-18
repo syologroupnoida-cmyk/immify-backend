@@ -13,7 +13,7 @@ cloudinary.config({
  *
  * @param {object} args
  * @param {Buffer} args.buffer        — file contents (from multer's memoryStorage)
- * @param {string} args.folder        — Cloudinary folder, e.g. "emmify/kyc-pan/<userId>"
+ * @param {string} args.folder        — Cloudinary folder, e.g. "Immify/kyc-pan/<userId>"
  * @param {string} [args.publicId]    — explicit asset name (else Cloudinary chooses)
  * @param {'image'|'raw'|'video'|'auto'} [args.resourceType='auto']
  * @param {boolean} [args.overwrite=false] — if true and publicId already exists, replace

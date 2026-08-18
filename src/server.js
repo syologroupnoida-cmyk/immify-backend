@@ -16,7 +16,7 @@ const start = async () => {
   // Binding to the default (localhost/127.0.0.1) would block all non-local
   // connections — fine for dev, broken behind a reverse proxy.
   server.listen(env.PORT, '0.0.0.0', () => {
-    console.log(`[server] Emmify API listening on port ${env.PORT} (${env.NODE_ENV})`);
+    console.log(`[server] Immify API listening on port ${env.PORT} (${env.NODE_ENV})`);
     if (!isProduction) {
       printRequestLogHeader();
     }

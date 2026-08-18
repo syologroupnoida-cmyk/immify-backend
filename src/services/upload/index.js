@@ -5,7 +5,7 @@ const sanitizeName = (name) =>
   (name || 'file').replace(/\.[^.]+$/, '').replace(/[^a-zA-Z0-9-_]/g, '_').slice(0, 80);
 
 /**
- * Generic image/document upload. Stores under emmify/<purpose>/<userId>/ so
+ * Generic image/document upload. Stores under Immify/<purpose>/<userId>/ so
  * audit and per-user cleanup are trivial later.
  *
  * Naming behavior:
@@ -33,7 +33,7 @@ export const uploadImage = async ({ buffer, mimetype, originalname, purpose, use
   try {
     const result = await uploadBuffer({
       buffer,
-      folder: `emmify/${purpose}/${userId}`,
+      folder: `Immify/${purpose}/${userId}`,
       publicId,
       resourceType: isPdf ? 'raw' : 'image',
       overwrite: hasCustomName, // named slots overwrite; ad-hoc uploads don't

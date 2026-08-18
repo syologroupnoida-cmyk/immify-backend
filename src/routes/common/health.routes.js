@@ -5,7 +5,7 @@ const router = Router();
 
 router.get('/', (_req, res) => {
   return sendSuccess(res, {
-    message: 'Emmify API is healthy.',
+    message: 'Immify API is healthy.',
     data: {
       uptime: process.uptime(),
       timestamp: new Date().toISOString(),

@@ -38,7 +38,7 @@ export const BYPASS_MODE = true;
 //   Low-level HTTP helper — Bearer auth + timeout + error mapping
 // -----------------------------------------------------------------------------
 
-// TODO: replace with Emmify's real production domain before going live.
+// TODO: replace with Immify's real production domain before going live.
 const APP_ORIGIN = env.FRONTEND_URL;
 
 const surepassFetch = async (path, body, method = 'POST') => {

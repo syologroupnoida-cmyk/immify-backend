@@ -1658,7 +1658,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Immigration Services\",\n  \"description\": \"PR, Express Entry, Citizenship, Residency\",\n  \"services\": [\n    { \"name\": \"PR\" },\n    { \"name\": \"Express Entry\" },\n    { \"name\": \"Citizenship\" },\n    { \"name\": \"Residency\" }\n  ]\n}"
+              "raw": "{\n  \"name\": \"Immigration Services\",\n  \"description\": \"PR, Express Entry, Citizenship, Residency\",\n  \"isActive\": false,\n  \"services\": [\n    { \"name\": \"PR\", \"isActive\": true },\n    { \"name\": \"Express Entry\", \"isActive\": true },\n    { \"name\": \"Citizenship\", \"isActive\": false },\n    { \"name\": \"Residency\", \"isActive\": true }\n  ]\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/super-admin/service-categories",
@@ -1669,7 +1669,8 @@
                 "super-admin",
                 "service-categories"
               ]
-            }
+            },
+            "description": "Create a category with optional child services. Set category isActive to false to create it inactive; omit it or use true to create it active. Each child service can also have its own isActive value."
           }
         },
         {
@@ -1684,7 +1685,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"International Services\",\n  \"description\": \"\"\n}"
+              "raw": "{\n  \"name\": \"International Services\",\n  \"description\": \"\",\n  \"isActive\": true\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/super-admin/service-categories",
@@ -1745,7 +1746,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"description\": \"Updated category description.\"\n}"
+              "raw": "{\n  \"name\": \"Updated Category\",\n  \"description\": \"Updated category description.\",\n  \"isActive\": false,\n  \"services\": [\n    {\n      \"id\": \"{{serviceId}}\",\n      \"name\": \"Updated Existing Service\",\n      \"isActive\": false\n    },\n    {\n      \"name\": \"New Service\",\n      \"description\": \"Created by the category PATCH request.\",\n      \"isActive\": true\n    }\n  ]\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/super-admin/service-categories/{{serviceCategoryId}}",
@@ -1757,7 +1758,8 @@
                 "service-categories",
                 "{{serviceCategoryId}}"
               ]
-            }
+            },
+            "description": "Update any supplied category fields. Set isActive to true to activate or false to deactivate. In services, entries with id are updated and entries without id are created; their isActive field works the same way. Omitted fields remain unchanged."
           }
         },
         {
@@ -1871,6 +1873,26 @@
     {
       "name": "Public - Subscriptions & Listings",
       "item": [
+        {
+          "name": "List Active Service Categories with Services",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/service-categories",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "service-categories"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            },
+            "description": "Public endpoint for signup/KYC forms. Returns active service categories with their active child services; no authentication required."
+          }
+        },
         {
           "name": "List Active Subscription Plans",
           "request": {

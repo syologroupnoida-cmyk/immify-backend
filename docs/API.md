@@ -140,6 +140,7 @@ New global leads are always created as `PENDING`; public callers cannot set stat
 | POST | `/super-admin/vendors/:userId/deactivate` | `{ reason }` (required) |
 | POST | `/super-admin/vendors/:userId/credits/adjust` | `{ amount, reason }`; audited positive/negative adjustment |
 | POST | `/super-admin/subscription-plans` | Create a dynamic DRAFT plan with category IDs and entitlement limits |
+| PATCH | `/super-admin/service-categories/:id` | Edit category fields, including `isActive`, and optionally create/update child services. A service with `id` is updated; one without `id` is created. |
 | GET | `/super-admin/subscription-plans` | All plans including draft/inactive/archived |
 | GET | `/super-admin/subscription-plans/:planId` | Plan detail |
 | PATCH | `/super-admin/subscription-plans/:planId` | Edit DRAFT or INACTIVE plan |

@@ -18,8 +18,27 @@ export const childServiceSchema = z
   .object({
     name: trimmedRequired(2, 100, 'Service name'),
     description: trimmedOptional(500, 'Service description'),
+    isActive: z.boolean().optional(),
   })
   .strict();
+
+const existingChildServiceSchema = z
+  .object({
+    id: z.string().uuid('Service id must be a valid UUID'),
+    name: trimmedRequired(2, 100, 'Service name').optional(),
+    description: trimmedOptional(500, 'Service description'),
+    isActive: z.boolean().optional(),
+  })
+  .strict()
+  .refine((service) => Object.keys(service).some((key) => key !== 'id'), {
+    message: 'At least one service field must be provided',
+  });
+
+// On category PATCH, an id identifies a child to update; no id means create.
+export const patchChildServiceSchema = z.union([
+  existingChildServiceSchema,
+  childServiceSchema,
+]);
 
 // ----------------------------------------------------------------------------
 //   POST /super-admin/service-categories
@@ -29,6 +48,7 @@ export const createServiceCategorySchema = z
   .object({
     name: trimmedRequired(2, 100, 'Category name'),
     description: trimmedOptional(500, 'Category description'),
+    isActive: z.boolean().optional(),
     services: z.array(childServiceSchema).max(50, 'Too many services').optional().default([]),
   })
   .strict();
@@ -41,8 +61,23 @@ export const updateServiceCategorySchema = z
     name: trimmedRequired(2, 100, 'Category name').optional(),
     description: trimmedOptional(500, 'Category description'),
     isActive: z.boolean().optional(),
+    services: z
+      .array(patchChildServiceSchema)
+      .min(1, 'At least one service must be provided')
+      .max(50, 'Too many services')
+      .optional(),
   })
   .strict()
+  .superRefine((data, ctx) => {
+    const ids = (data.services ?? []).flatMap((service) => (service.id ? [service.id] : []));
+    if (new Set(ids).size !== ids.length) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['services'],
+        message: 'A service id may only appear once',
+      });
+    }
+  })
   .refine((d) => Object.keys(d).length > 0, {
     message: 'At least one field must be provided',
   });

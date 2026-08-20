@@ -16,6 +16,11 @@ export const listCategories = asyncHandler(async (req, res) => {
   return sendSuccess(res, { statusCode: 200, message: 'Service categories retrieved.', data });
 });
 
+export const listPublicCategories = asyncHandler(async (_req, res) => {
+  const data = await categoryService.listPublicCategories();
+  return sendSuccess(res, { statusCode: 200, message: 'Service categories retrieved.', data });
+});
+
 export const getCategory = asyncHandler(async (req, res) => {
   const data = await categoryService.getCategory(req.params.id);
   return sendSuccess(res, { statusCode: 200, message: 'Service category retrieved.', data });

@@ -23,6 +23,7 @@ router.get('/', categoryController.listCategories);
 router.get('/:id', categoryController.getCategory);
 
 // PATCH /api/v1/super-admin/service-categories/:id
+// Category fields plus optional services: entries with id update; without id create.
 router.patch(
   '/:id',
   validateRequest(updateServiceCategorySchema),

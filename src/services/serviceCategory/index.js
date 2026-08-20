@@ -21,17 +21,22 @@ const slugify = (name) =>
 //   Category
 // -----------------------------------------------------------------------------
 
-export const createCategory = async ({ name, description, services }) => {
+export const createCategory = async ({ name, description, isActive, services }) => {
   return categoryRepo.createCategoryWithServices({
     name,
     slug: slugify(name),
     description,
+    isActive,
     services,
   });
 };
 
 export const listCategories = async () => {
   return categoryRepo.listCategories();
+};
+
+export const listPublicCategories = async () => {
+  return categoryRepo.listActiveCategoriesWithServices();
 };
 
 export const getCategory = async (id) => {
@@ -43,7 +48,29 @@ export const getCategory = async (id) => {
 };
 
 export const updateCategory = async (id, data) => {
-  return categoryRepo.updateCategory(id, data);
+  const category = await categoryRepo.findCategoryRef(id);
+  if (!category) {
+    throw ApiError.notFound('Service category not found.');
+  }
+
+  const { services = [], ...categoryFields } = data;
+  const serviceIds = services.flatMap((service) => (service.id ? [service.id] : []));
+  if (serviceIds.length > 0) {
+    const existingIds = await categoryRepo.findServiceIdsInCategory(id, serviceIds);
+    const invalidIds = serviceIds.filter((serviceId) => !existingIds.includes(serviceId));
+    if (invalidIds.length > 0) {
+      throw ApiError.badRequest('Every updated service must belong to this category.', {
+        invalidServiceIds: invalidIds,
+      });
+    }
+  }
+
+  const categoryData = {
+    ...categoryFields,
+    ...(categoryFields.name && { slug: slugify(categoryFields.name) }),
+  };
+
+  return categoryRepo.updateCategoryWithServices({ id, categoryData, services });
 };
 
 export const deleteCategory = async (id) => {

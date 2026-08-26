@@ -1,0 +1,107 @@
+[
+  {
+    "name": "Basic Bronze Plan",
+    "description": "For agents starting with package marketplace creation.",
+    "salePriceInPaise": 39900,
+    "offerPriceInPaise": 29900,
+    "currency": "INR",
+    "billingCycle": "MONTHLY",
+    "durationDays": 30,
+    "trialDays": 0,
+    "includedCredits": 100,
+    "maxPackages": 5,
+    "maxJobPosts": 2,
+    "jobPortalAccess": false,
+    "directLeadPriceCredits": 8,
+    "priorityWeight": 0,
+    "isFeatured": false,
+    "displayOrder": 1,
+    "isActive": true,
+    "categoryIds": ["REPLACE_WITH_ACTIVE_CATEGORY_ID"],
+    "displayContent": {
+      "badgeText": "Starter",
+      "ribbonText": null,
+      "iconUrl": "",
+      "themeColor": "#8B4513",
+      "ctaButtonText": "Choose Basic Bronze",
+      "features": [
+        { "text": "Create up to 5 marketplace packages", "included": true },
+        { "text": "100 wallet credits included", "included": true },
+        { "text": "Standard marketplace visibility", "included": true },
+        { "text": "Direct contact after lead purchase", "included": true },
+        { "text": "Priority placement", "included": false }
+      ]
+    },
+    "rules": { "supportLevel": "EMAIL", "analyticsLevel": "BASIC" }
+  },
+  {
+    "name": "Advanced Silver Plan",
+    "description": "For growing agencies that need more packages, leads, and visibility.",
+    "salePriceInPaise": 79900,
+    "offerPriceInPaise": 59900,
+    "currency": "INR",
+    "billingCycle": "MONTHLY",
+    "durationDays": 30,
+    "trialDays": 0,
+    "includedCredits": 300,
+    "maxPackages": 20,
+    "maxJobPosts": 10,
+    "jobPortalAccess": true,
+    "directLeadPriceCredits": 6,
+    "priorityWeight": 50,
+    "isFeatured": true,
+    "displayOrder": 2,
+    "isActive": true,
+    "categoryIds": ["REPLACE_WITH_ACTIVE_CATEGORY_ID"],
+    "displayContent": {
+      "badgeText": "Most Popular",
+      "ribbonText": "Best Value",
+      "iconUrl": "",
+      "themeColor": "#A7A9AC",
+      "ctaButtonText": "Choose Advanced Silver",
+      "features": [
+        { "text": "Create up to 20 marketplace packages", "included": true },
+        { "text": "300 wallet credits included", "included": true },
+        { "text": "Enhanced marketplace visibility", "included": true },
+        { "text": "Job portal access", "included": true },
+        { "text": "Priority email support", "included": true }
+      ]
+    },
+    "rules": { "supportLevel": "PRIORITY_EMAIL", "analyticsLevel": "ADVANCED" }
+  },
+  {
+    "name": "Premium Gold Plan",
+    "description": "For established agencies requiring maximum reach and premium support.",
+    "salePriceInPaise": 149900,
+    "offerPriceInPaise": 119900,
+    "currency": "INR",
+    "billingCycle": "MONTHLY",
+    "durationDays": 30,
+    "trialDays": 0,
+    "includedCredits": 750,
+    "maxPackages": 50,
+    "maxJobPosts": 30,
+    "jobPortalAccess": true,
+    "directLeadPriceCredits": 4,
+    "priorityWeight": 100,
+    "isFeatured": false,
+    "displayOrder": 3,
+    "isActive": true,
+    "categoryIds": ["REPLACE_WITH_ACTIVE_CATEGORY_ID"],
+    "displayContent": {
+      "badgeText": "Premium",
+      "ribbonText": "Maximum Reach",
+      "iconUrl": "",
+      "themeColor": "#D4AF37",
+      "ctaButtonText": "Choose Premium Gold",
+      "features": [
+        { "text": "Create up to 50 marketplace packages", "included": true },
+        { "text": "750 wallet credits included", "included": true },
+        { "text": "Premium marketplace visibility", "included": true },
+        { "text": "Highest listing priority", "included": true },
+        { "text": "Dedicated account support", "included": true }
+      ]
+    },
+    "rules": { "supportLevel": "DEDICATED", "analyticsLevel": "PREMIUM" }
+  }
+]

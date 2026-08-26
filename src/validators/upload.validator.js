@@ -9,6 +9,7 @@ export const UPLOAD_PURPOSES = [
   'avatar',
   'favicon_icon',
   'header_logo',
+  'lead-document',
   'other',
 ];
 

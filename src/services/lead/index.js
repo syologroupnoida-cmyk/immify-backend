@@ -1,13 +1,26 @@
 import { ApiError } from '../../utils/ApiError.js';
 import * as leadRepo from '../../repositories/lead.repository.js';
+import { getLeadFormConfig } from './formConfig.js';
+
+const getSelectedService = async (categoryId, serviceId) => {
+  const service = await leadRepo.findActiveService(serviceId, categoryId);
+  if (!service) throw ApiError.badRequest('The selected service does not belong to the selected active category.');
+  return service;
+};
+
+export const getFormConfig = async ({ categoryId, serviceId }) => {
+  const service = await getSelectedService(categoryId, serviceId);
+  return getLeadFormConfig({ category: service.category, service });
+};
 
 export const createGlobalLead = async ({ clientUserId, payload }) => {
-  const service = await leadRepo.findActiveService(payload.serviceId, payload.categoryId);
-  if (!service) {
-    throw ApiError.badRequest('The selected service does not belong to the selected active category.');
-  }
+  await getSelectedService(payload.categoryId, payload.serviceId);
+  const { passportAvailable, dateOfBirth, passportExpiry, ...leadFields } = payload;
   return leadRepo.createGlobalLead({
-    ...payload,
+    ...leadFields,
+    dateOfBirth: dateOfBirth ? new Date(`${dateOfBirth}T00:00:00.000Z`) : null,
+    passportAvailable: passportAvailable === undefined ? null : passportAvailable === 'Yes',
+    passportExpiry: passportExpiry ? new Date(`${passportExpiry}T00:00:00.000Z`) : null,
     clientUserId: clientUserId ?? null,
   });
 };
@@ -33,10 +46,18 @@ export const verifyLead = ({ leadId, adminId }) => transition({
   message: 'Only a pending lead can be verified.',
 });
 
-export const activateLead = ({ leadId, adminId, creditCost, expiresAt }) => transition({
+export const activateLead = ({ leadId, adminId, creditCost, maxUnlocks, expiresAt }) => transition({
   leadId,
   fromStatus: 'VERIFIED',
-  data: { status: 'ACTIVE', creditCost, reviewedByAdminId: adminId, activatedAt: new Date(), expiresAt: expiresAt ?? null },
+  data: {
+    status: 'ACTIVE',
+    creditCost,
+    maxUnlocks,
+    unlockCount: 0,
+    reviewedByAdminId: adminId,
+    activatedAt: new Date(),
+    expiresAt: expiresAt ?? null,
+  },
   message: 'Only a verified lead can be activated.',
 });
 

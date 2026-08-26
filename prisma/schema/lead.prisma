@@ -18,7 +18,59 @@ model Lead {
   message   String?
   metadata  Json?
 
+  whatsappNumber String?
+  gender         String?
+  dateOfBirth    DateTime? @db.Date
+  maritalStatus  String?
+  nationality    String?
+
+  servicesRequired     String[] @default([])
+  destinationCountries String[] @default([])
+
+  highestQualification String?
+  passingYear          Int?
+  university           String?
+  percentageOrCgpa     String?
+
+  currentCompany     String?
+  currentDesignation String?
+  industry           String?
+  yearsOfExperience  Float?
+  currentSalary      String?
+  relevantExperience String?
+
+  languageTestTaken String?
+  overallScore      String?
+  listeningScore    String?
+  readingScore      String?
+  writingScore      String?
+  speakingScore     String?
+
+  passportAvailable Boolean?
+  passportExpiry    DateTime? @db.Date
+
+  familyMaritalStatus String?
+  spouseQualification String?
+  children            Int?
+  dependents          Int?
+
+  investmentBudget    String?
+  applicationTimeline String?
+
+  resumeUrl                  String?
+  passportDocumentUrl        String?
+  ieltsDocumentUrl           String?
+  educationalCertificateUrls String[] @default([])
+  experienceLetterUrls       String[] @default([])
+  bankStatementUrl           String?
+  additionalInformation      String?
+
+  consentToCalls Boolean @default(false)
+  termsAccepted  Boolean @default(false)
+
   creditCost        Int?
+  maxUnlocks        Int?
+  unlockCount       Int       @default(0)
   reviewedByAdminId String?
   reviewedAt        DateTime?
   activatedAt       DateTime?
@@ -69,6 +121,7 @@ model VendorCreditTransaction {
   id             String                @id @default(uuid())
   vendorUserId   String
   leadPurchaseId String?               @unique
+  subscriptionId String?               @unique
   type           CreditTransactionType
   amount         Int
   balanceAfter   Int
@@ -76,8 +129,9 @@ model VendorCreditTransaction {
   metadata       Json?
   createdAt      DateTime              @default(now())
 
-  vendor       VendorProfile @relation(fields: [vendorUserId], references: [userId], onDelete: Restrict)
-  leadPurchase LeadPurchase? @relation(fields: [leadPurchaseId], references: [id], onDelete: Restrict)
+  vendor       VendorProfile       @relation(fields: [vendorUserId], references: [userId], onDelete: Restrict)
+  leadPurchase LeadPurchase?       @relation(fields: [leadPurchaseId], references: [id], onDelete: Restrict)
+  subscription VendorSubscription? @relation(fields: [subscriptionId], references: [id], onDelete: Restrict)
 
   @@index([vendorUserId, createdAt])
   @@map("vendor_credit_transactions")

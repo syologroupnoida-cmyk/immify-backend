@@ -2,6 +2,9 @@ import { asyncHandler } from '../utils/asyncHandler.js';
 import { sendSuccess } from '../utils/response.js';
 import * as leadService from '../services/lead/index.js';
 
+export const getFormConfig = asyncHandler(async (req, res) =>
+  sendSuccess(res, { message: 'Lead form configuration retrieved.', data: await leadService.getFormConfig(req.query) }));
+
 export const createGlobalLead = asyncHandler(async (req, res) => {
   const lead = await leadService.createGlobalLead({
     clientUserId: req.user?.role === 'CLIENT' ? req.user.id : null,

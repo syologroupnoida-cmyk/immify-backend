@@ -13,7 +13,8 @@ const assertCategories = async (categoryIds) => {
 
 export const createPlan = async ({ adminId, payload }) => {
   const categoryIds = await assertCategories(payload.categoryIds);
-  return repo.createPlan({ ...payload, categoryIds, slug: slugify(payload.name), createdByAdminId: adminId });
+  const { isActive, ...data } = payload;
+  return repo.createPlan({ ...data, status: isActive ? 'ACTIVE' : 'DRAFT', categoryIds, slug: slugify(payload.name), createdByAdminId: adminId, ...(isActive && { activatedAt: new Date() }) });
 };
 export const listAdminPlans = () => repo.listPlans();
 export const listPublicPlans = () => repo.listPlans({ status: 'ACTIVE' });
@@ -29,10 +30,18 @@ export const getAdminPlan = async (id) => {
 };
 export const updatePlan = async ({ id, adminId, payload }) => {
   const plan = await getAdminPlan(id);
-  if (!['DRAFT', 'INACTIVE'].includes(plan.status)) throw ApiError.conflict('Deactivate an active plan before changing its commercial terms.');
-  const { categoryIds: rawIds, name, ...fields } = payload;
+  const { categoryIds: rawIds, name, isActive, ...fields } = payload;
+  const hasCommercialChanges = Boolean(rawIds || name || Object.keys(fields).length);
+  if (hasCommercialChanges && !['DRAFT', 'INACTIVE'].includes(plan.status)) throw ApiError.conflict('Deactivate an active plan before changing its commercial terms.');
+  if (isActive && plan.status === 'ARCHIVED') throw ApiError.conflict('An archived plan cannot be activated.');
   const categoryIds = rawIds ? await assertCategories(rawIds) : undefined;
-  return repo.updatePlan({ id, categoryIds, data: { ...fields, ...(name && { name, slug: slugify(name) }), updatedByAdminId: adminId } });
+  const salePrice = fields.salePriceInPaise ?? plan.salePriceInPaise;
+  const offerPrice = Object.hasOwn(fields, 'offerPriceInPaise') ? fields.offerPriceInPaise : plan.offerPriceInPaise;
+  if (offerPrice != null && offerPrice > salePrice) throw ApiError.badRequest('Offer price cannot exceed sale price.');
+  const statusData = isActive === undefined ? {} : isActive
+    ? { status: 'ACTIVE', activatedAt: new Date(), archivedAt: null }
+    : { status: plan.status === 'DRAFT' ? 'DRAFT' : 'INACTIVE' };
+  return repo.updatePlan({ id, categoryIds, data: { ...fields, ...statusData, ...(name && { name, slug: slugify(name) }), updatedByAdminId: adminId } });
 };
 export const activatePlan = async (id) => {
   const plan = await getAdminPlan(id);
@@ -58,9 +67,45 @@ export const getMySubscription = async ({ vendorUserId, id }) => {
   if (!sub || sub.vendorUserId !== vendorUserId) throw ApiError.notFound('Subscription not found.');
   return sub;
 };
+export const getMyEntitlements = async (vendorUserId) => {
+  const subscription = await repo.getSubscriptionEntitlements(vendorUserId);
+  if (!subscription) return { hasActiveSubscription: false, subscription: null, usage: null, categories: [] };
+  const publishedPackages = await repo.countPublishedListings(vendorUserId);
+  const limit = subscription.maxPackagesSnapshot;
+  return {
+    hasActiveSubscription: true,
+    subscription: {
+      id: subscription.id,
+      planId: subscription.planId,
+      planName: subscription.planNameSnapshot,
+      startsAt: subscription.startsAt,
+      expiresAt: subscription.expiresAt,
+      includedCredits: subscription.includedCreditsSnapshot,
+      directLeadPriceCredits: subscription.directLeadPriceCreditsSnapshot,
+      rules: subscription.plan.rules,
+    },
+    usage: {
+      publishedPackages,
+      maxPackages: limit,
+      remainingPackages: limit === null ? null : Math.max(0, limit - publishedPackages),
+    },
+    categories: subscription.categories.map(({ category }) => category),
+  };
+};
+export const listAdminSubscriptions = (query) => repo.listAdminSubscriptions(query);
+export const getAdminSubscription = async (id) => {
+  const subscription = await repo.findAdminSubscription(id);
+  if (!subscription) throw ApiError.notFound('Subscription purchase not found.');
+  return subscription;
+};
 export const confirmPayment = async ({ subscriptionId, payload }) => {
   const result = await repo.confirmPayment({ subscriptionId, ...payload });
   if (result.invalid) throw ApiError.conflict('Only a pending subscription with a payment can be activated.');
+  return result.subscription;
+};
+export const rejectPayment = async ({ subscriptionId, reason }) => {
+  const result = await repo.rejectPayment({ subscriptionId, reason });
+  if (result.invalid) throw ApiError.conflict('Only a pending subscription payment can be rejected.');
   return result.subscription;
 };
 
@@ -70,10 +115,10 @@ const requireEntitlement = async ({ vendorUserId, categoryId, requireSlot = fals
   if (!subscription.categories.some((item) => item.categoryId === categoryId)) {
     throw ApiError.forbidden('This category is not included in your subscription.', { code: 'CATEGORY_NOT_INCLUDED' });
   }
-  if (requireSlot && subscription.maxPublicServicesSnapshot !== null) {
+  if (requireSlot && subscription.maxPackagesSnapshot !== null) {
     const used = await repo.countPublishedListings(vendorUserId);
-    if (used >= subscription.maxPublicServicesSnapshot) {
-      throw ApiError.forbidden('Your public service listing limit has been reached.', { code: 'SERVICE_LIMIT_REACHED', limit: subscription.maxPublicServicesSnapshot });
+    if (used >= subscription.maxPackagesSnapshot) {
+      throw ApiError.forbidden('Your public service listing limit has been reached.', { code: 'SERVICE_LIMIT_REACHED', limit: subscription.maxPackagesSnapshot });
     }
   }
   return subscription;

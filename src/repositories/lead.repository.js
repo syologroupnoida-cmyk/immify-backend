@@ -10,6 +10,8 @@ const safeMarketplaceSelect = {
   type: true,
   status: true,
   creditCost: true,
+  maxUnlocks: true,
+  unlockCount: true,
   country: true,
   state: true,
   city: true,
@@ -26,7 +28,46 @@ const fullLeadSelect = {
   lastName: true,
   email: true,
   phone: true,
-  metadata: true,
+  whatsappNumber: true,
+  gender: true,
+  dateOfBirth: true,
+  maritalStatus: true,
+  nationality: true,
+  servicesRequired: true,
+  destinationCountries: true,
+  highestQualification: true,
+  passingYear: true,
+  university: true,
+  percentageOrCgpa: true,
+  currentCompany: true,
+  currentDesignation: true,
+  industry: true,
+  yearsOfExperience: true,
+  currentSalary: true,
+  relevantExperience: true,
+  languageTestTaken: true,
+  overallScore: true,
+  listeningScore: true,
+  readingScore: true,
+  writingScore: true,
+  speakingScore: true,
+  passportAvailable: true,
+  passportExpiry: true,
+  familyMaritalStatus: true,
+  spouseQualification: true,
+  children: true,
+  dependents: true,
+  investmentBudget: true,
+  applicationTimeline: true,
+  resumeUrl: true,
+  passportDocumentUrl: true,
+  ieltsDocumentUrl: true,
+  educationalCertificateUrls: true,
+  experienceLetterUrls: true,
+  bankStatementUrl: true,
+  additionalInformation: true,
+  consentToCalls: true,
+  termsAccepted: true,
   reviewedAt: true,
   reviewedByAdminId: true,
   rejectedAt: true,
@@ -38,7 +79,7 @@ const fullLeadSelect = {
 export const findActiveService = (serviceId, categoryId) =>
   prisma.service.findFirst({
     where: { id: serviceId, categoryId, isActive: true, category: { isActive: true } },
-    select: { id: true, categoryId: true },
+    select: { id: true, name: true, categoryId: true, category: { select: { id: true, name: true, slug: true } } },
   });
 
 export const createGlobalLead = (data) =>
@@ -86,8 +127,12 @@ export const listMatchedMarketplaceLeads = async ({ vendorUserId, categoryId, se
   return { items, total };
 };
 
-export const purchaseLead = ({ leadId, vendorUserId }) =>
-  prisma.$transaction(async (tx) => {
+export const purchaseLead = async ({ leadId, vendorUserId }) => {
+  const unavailable = new Error('LEAD_UNAVAILABLE');
+  const insufficientCredits = new Error('INSUFFICIENT_CREDITS');
+
+  try {
+    return await prisma.$transaction(async (tx) => {
     const existing = await tx.leadPurchase.findUnique({
       where: { leadId_vendorUserId: { leadId, vendorUserId } },
       select: { id: true },
@@ -103,9 +148,19 @@ export const purchaseLead = ({ leadId, vendorUserId }) =>
         OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }],
         category: { vendorOfferings: { some: { vendorUserId, isActive: true } } },
       },
-      select: { id: true, creditCost: true },
+      select: { id: true, creditCost: true, maxUnlocks: true, unlockCount: true },
     });
-    if (!lead) return { unavailable: true };
+    if (!lead || !lead.maxUnlocks || lead.unlockCount >= lead.maxUnlocks) throw unavailable;
+
+    const isFinalUnlock = lead.unlockCount + 1 >= lead.maxUnlocks;
+    const claimed = await tx.lead.updateMany({
+      where: { id: lead.id, status: 'ACTIVE', unlockCount: lead.unlockCount },
+      data: {
+        unlockCount: { increment: 1 },
+        ...(isFinalUnlock && { status: 'EXPIRED', expiresAt: new Date() }),
+      },
+    });
+    if (claimed.count !== 1) throw unavailable;
 
     const debit = await tx.vendorProfile.updateMany({
       where: {
@@ -116,7 +171,7 @@ export const purchaseLead = ({ leadId, vendorUserId }) =>
       },
       data: { creditBalance: { decrement: lead.creditCost } },
     });
-    if (debit.count !== 1) return { insufficientCredits: true };
+    if (debit.count !== 1) throw insufficientCredits;
 
     const purchase = await tx.leadPurchase.create({
       data: { leadId, vendorUserId, creditsSpent: lead.creditCost },
@@ -132,8 +187,21 @@ export const purchaseLead = ({ leadId, vendorUserId }) =>
         description: `Unlocked global lead ${leadId}`,
       },
     });
-    return { purchaseId: purchase.id, creditsSpent: lead.creditCost, balance: wallet.creditBalance };
-  }, { isolationLevel: 'Serializable' });
+    return {
+      purchaseId: purchase.id,
+      creditsSpent: lead.creditCost,
+      balance: wallet.creditBalance,
+      unlockCount: lead.unlockCount + 1,
+      maxUnlocks: lead.maxUnlocks,
+      leadExpired: isFinalUnlock,
+    };
+    }, { isolationLevel: 'Serializable' });
+  } catch (error) {
+    if (error === unavailable) return { unavailable: true };
+    if (error === insufficientCredits) return { insufficientCredits: true };
+    throw error;
+  }
+};
 
 export const findPurchasedLead = (leadId, vendorUserId) =>
   prisma.lead.findFirst({

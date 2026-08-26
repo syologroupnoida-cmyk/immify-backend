@@ -25,12 +25,13 @@ export const setPlanStatus = (id, status, data = {}) => prisma.subscriptionPlan.
 export const checkout = ({ vendorUserId, plan, autoRenew }) => prisma.vendorSubscription.create({
   data: {
     vendorUserId, planId: plan.id, autoRenew,
-    planNameSnapshot: plan.name, priceInPaiseSnapshot: plan.priceInPaise, currencySnapshot: plan.currency,
-    maxPublicServicesSnapshot: plan.maxPublicServices, maxJobPostsSnapshot: plan.maxJobPosts,
-    jobPortalAccessSnapshot: plan.jobPortalAccess, directLeadCreditPriceSnapshot: plan.directLeadCreditPrice,
+    planNameSnapshot: plan.name, salePriceInPaiseSnapshot: plan.salePriceInPaise,
+    offerPriceInPaiseSnapshot: plan.offerPriceInPaise, currencySnapshot: plan.currency,
+    includedCreditsSnapshot: plan.includedCredits, maxPackagesSnapshot: plan.maxPackages, maxJobPostsSnapshot: plan.maxJobPosts,
+    jobPortalAccessSnapshot: plan.jobPortalAccess, directLeadPriceCreditsSnapshot: plan.directLeadPriceCredits,
     durationDaysSnapshot: plan.durationDays,
     categories: { create: plan.categories.map(({ categoryId }) => ({ categoryId })) },
-    payments: { create: { amountInPaise: plan.priceInPaise, currency: plan.currency } },
+    payments: { create: { amountInPaise: plan.offerPriceInPaise ?? plan.salePriceInPaise, currency: plan.currency } },
   },
   include: { plan: true, categories: { include: { category: true } }, payments: true },
 });
@@ -41,6 +42,30 @@ export const listVendorSubscriptions = (vendorUserId) => prisma.vendorSubscripti
 
 export const findSubscription = (id) => prisma.vendorSubscription.findUnique({
   where: { id }, include: { plan: true, categories: { include: { category: true } }, payments: true },
+});
+
+export const listAdminSubscriptions = ({ status, vendorUserId, planId, take, skip }) => prisma.vendorSubscription.findMany({
+  where: { ...(status && { status }), ...(vendorUserId && { vendorUserId }), ...(planId && { planId }) },
+  include: {
+    plan: true,
+    vendor: { select: { userId: true, user: { select: { firstName: true, lastName: true, email: true, phone: true } } } },
+    categories: { include: { category: true } },
+    payments: true,
+  },
+  orderBy: { createdAt: 'desc' },
+  take,
+  skip,
+});
+
+export const findAdminSubscription = (id) => prisma.vendorSubscription.findUnique({
+  where: { id },
+  include: {
+    plan: true,
+    vendor: { select: { userId: true, creditBalance: true, user: { select: { firstName: true, lastName: true, email: true, phone: true } } } },
+    categories: { include: { category: { include: { services: { where: { isActive: true } } } } } },
+    payments: true,
+    creditTransaction: true,
+  },
 });
 
 export const confirmPayment = ({ subscriptionId, providerPaymentId, provider }) => prisma.$transaction(async (tx) => {
@@ -56,6 +81,23 @@ export const confirmPayment = ({ subscriptionId, providerPaymentId, provider }) 
     where: { id: subscription.payments[0].id },
     data: { status: 'PAID', provider, providerPaymentId, paidAt: now },
   });
+  if (subscription.includedCreditsSnapshot > 0) {
+    await tx.vendorProfile.update({
+      where: { userId: subscription.vendorUserId },
+      data: { creditBalance: { increment: subscription.includedCreditsSnapshot } },
+    });
+    const wallet = await tx.vendorProfile.findUnique({ where: { userId: subscription.vendorUserId }, select: { creditBalance: true } });
+    await tx.vendorCreditTransaction.create({
+      data: {
+        vendorUserId: subscription.vendorUserId,
+        subscriptionId,
+        type: 'SUBSCRIPTION_CREDIT',
+        amount: subscription.includedCreditsSnapshot,
+        balanceAfter: wallet.creditBalance,
+        description: `Credits included with ${subscription.planNameSnapshot}`,
+      },
+    });
+  }
   const activated = await tx.vendorSubscription.update({
     where: { id: subscriptionId }, data: { status: 'ACTIVE', startsAt: now, expiresAt },
     include: { plan: true, categories: { include: { category: true } }, payments: true },
@@ -63,9 +105,34 @@ export const confirmPayment = ({ subscriptionId, providerPaymentId, provider }) 
   return { subscription: activated };
 }, { isolationLevel: 'Serializable' });
 
+export const rejectPayment = ({ subscriptionId, reason }) => prisma.$transaction(async (tx) => {
+  const subscription = await tx.vendorSubscription.findUnique({ where: { id: subscriptionId }, include: { payments: true } });
+  if (!subscription || subscription.status !== 'PENDING_PAYMENT' || !subscription.payments[0]) return { invalid: true };
+  const now = new Date();
+  await tx.subscriptionPayment.update({
+    where: { id: subscription.payments[0].id },
+    data: { status: 'FAILED', failedAt: now, providerResponse: { manualRejectionReason: reason } },
+  });
+  const failed = await tx.vendorSubscription.update({
+    where: { id: subscriptionId },
+    data: { status: 'PAYMENT_FAILED', cancellationReason: reason },
+    include: { plan: true, categories: { include: { category: true } }, payments: true },
+  });
+  return { subscription: failed };
+}, { isolationLevel: 'Serializable' });
+
 export const getActiveSubscription = (vendorUserId) => prisma.vendorSubscription.findFirst({
   where: { vendorUserId, status: 'ACTIVE', startsAt: { lte: new Date() }, expiresAt: { gt: new Date() } },
   include: { categories: true, plan: true }, orderBy: { expiresAt: 'desc' },
+});
+
+export const getSubscriptionEntitlements = (vendorUserId) => prisma.vendorSubscription.findFirst({
+  where: { vendorUserId, status: 'ACTIVE', startsAt: { lte: new Date() }, expiresAt: { gt: new Date() } },
+  include: {
+    plan: true,
+    categories: { include: { category: { include: { services: { where: { isActive: true }, orderBy: { name: 'asc' } } } } } },
+  },
+  orderBy: { expiresAt: 'desc' },
 });
 
 export const findCatalogService = (serviceId, categoryId) => prisma.service.findFirst({ where: { id: serviceId, categoryId, isActive: true }, select: { id: true } });

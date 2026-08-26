@@ -13,12 +13,15 @@ const router = Router();
 //   3. validateRequest   → Zod validates purpose (now available in req.body)
 //   4. controller        → uploads to Cloudinary, returns URL
 
-router.post(
-  '/image',
+const uploadHandlers = [
   authenticateUser,
   uploadSingleFile,
   validateRequest(uploadImageSchema),
   uploadController.uploadImage,
-);
+];
+
+// Generic route for images and PDFs. Keep /image as a backwards-compatible alias.
+router.post('/file', ...uploadHandlers);
+router.post('/image', ...uploadHandlers);
 
 export default router;

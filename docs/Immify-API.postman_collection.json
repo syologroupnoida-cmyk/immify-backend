@@ -587,7 +587,7 @@
       "name": "Uploads",
       "item": [
         {
-          "name": "Upload Image/Document",
+          "name": "Upload Lead PDF/Document",
           "request": {
             "method": "POST",
             "header": [],
@@ -601,26 +601,27 @@
                 },
                 {
                   "key": "purpose",
-                  "value": "avatar",
+                  "value": "lead-document",
                   "type": "text"
                 },
                 {
                   "key": "name",
-                  "value": "",
+                  "value": "resume",
                   "type": "text"
                 }
               ]
             },
             "url": {
-              "raw": "{{baseUrl}}/uploads/image",
+              "raw": "{{baseUrl}}/uploads/file",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "uploads",
-                "image"
+                "file"
               ]
-            }
+            },
+            "description": "Select a PDF, JPEG, PNG, or WebP in the file field. PDFs are stored in Cloudinary as raw resources. Copy data.url from the response into resumeUrl, passportDocumentUrl, ieltsDocumentUrl, educationalCertificateUrls, experienceLetterUrls, or bankStatementUrl when creating the lead."
           }
         }
       ]
@@ -895,7 +896,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"categoryId\": \"{{serviceCategoryId}}\",\n  \"serviceId\": \"{{serviceId}}\",\n  \"firstName\": \"Rahul\",\n  \"lastName\": \"Sharma\",\n  \"email\": \"rahul.lead@example.com\",\n  \"phone\": \"+919999999999\",\n  \"country\": \"India\",\n  \"state\": \"Delhi\",\n  \"city\": \"New Delhi\",\n  \"message\": \"Need consultation for this service.\",\n  \"metadata\": {\n    \"source\": \"postman\"\n  }\n}"
+              "raw": "{\n  \"categoryId\": \"{{serviceCategoryId}}\",\n  \"serviceId\": \"{{serviceId}}\",\n  \"firstName\": \"Rahul\",\n  \"lastName\": \"Sharma\",\n  \"email\": \"rahul.lead@example.com\",\n  \"phone\": \"+919999999999\",\n  \"whatsappNumber\": \"+919999999999\",\n  \"gender\": \"Male\",\n  \"dateOfBirth\": \"1990-01-15\",\n  \"maritalStatus\": \"Married\",\n  \"nationality\": \"Indian\",\n  \"city\": \"New Delhi\",\n  \"state\": \"Delhi\",\n  \"country\": \"India\",\n  \"servicesRequired\": [\"Permanent Residency (PR)\", \"Immigration Consultation\"],\n  \"destinationCountries\": [\"Canada\"],\n  \"highestQualification\": \"B.Tech\",\n  \"passingYear\": 2012,\n  \"university\": \"Delhi Technological University\",\n  \"percentageOrCgpa\": \"8.2 CGPA\",\n  \"currentCompany\": \"Example Technologies Pvt Ltd\",\n  \"currentDesignation\": \"Senior Software Engineer\",\n  \"industry\": \"Information Technology\",\n  \"yearsOfExperience\": 10,\n  \"currentSalary\": \"18 LPA\",\n  \"relevantExperience\": \"8 years in software development\",\n  \"languageTestTaken\": \"IELTS\",\n  \"overallScore\": \"8.0\",\n  \"listeningScore\": \"8.5\",\n  \"readingScore\": \"8.0\",\n  \"writingScore\": \"7.5\",\n  \"speakingScore\": \"8.0\",\n  \"passportAvailable\": \"Yes\",\n  \"passportExpiry\": \"2030-12-31\",\n  \"familyMaritalStatus\": \"Married\",\n  \"spouseQualification\": \"MBA\",\n  \"children\": 1,\n  \"dependents\": 2,\n  \"investmentBudget\": \"5-10 Lakhs\",\n  \"applicationTimeline\": \"Immediately\",\n  \"resumeUrl\": \"https://example.com/documents/resume.pdf\",\n  \"passportDocumentUrl\": \"https://example.com/documents/passport.pdf\",\n  \"ieltsDocumentUrl\": \"https://example.com/documents/ielts.pdf\",\n  \"educationalCertificateUrls\": [\"https://example.com/documents/degree.pdf\"],\n  \"experienceLetterUrls\": [\"https://example.com/documents/experience-letter.pdf\"],\n  \"bankStatementUrl\": \"https://example.com/documents/bank-statement.pdf\",\n  \"additionalInformation\": \"I want PR for Canada under Express Entry.\",\n  \"consentToCalls\": true,\n  \"termsAccepted\": true\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/leads",
@@ -904,6 +905,36 @@
               ],
               "path": [
                 "leads"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Customer Lead Form Configuration",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/leads/form-config?categoryId={{serviceCategoryId}}&serviceId={{serviceId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "leads",
+                "form-config"
+              ],
+              "query": [
+                {
+                  "key": "categoryId",
+                  "value": "{{serviceCategoryId}}"
+                },
+                {
+                  "key": "serviceId",
+                  "value": "{{serviceId}}"
+                }
               ]
             }
           }
@@ -1207,7 +1238,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"creditCost\": 15\n}"
+              "raw": "{\n  \"creditCost\": 15,\n  \"maxUnlocks\": 5,\n  \"expiresAt\": \"2027-12-31T23:59:59.000Z\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/admin/leads/{{leadId}}/activate",
@@ -1220,7 +1251,8 @@
                 "{{leadId}}",
                 "activate"
               ]
-            }
+            },
+            "description": "Activate a verified global lead. maxUnlocks controls how many different vendors may unlock it. The last allowed unlock automatically changes the lead status to EXPIRED. expiresAt is optional and can expire the lead earlier by time."
           }
         },
         {
@@ -1967,7 +1999,7 @@
       },
       "item": [
         {
-          "name": "Create Draft Subscription Plan",
+          "name": "Create Basic Bronze Plan",
           "event": [
             {
               "listen": "test",
@@ -1976,7 +2008,7 @@
                 "exec": [
                   "if (pm.response.code < 300) {",
                   "  const data=pm.response.json().data; const value=data && data.id;",
-                  "  if (value) pm.environment.set('subscriptionPlanId', value);",
+                  "  if (value) { pm.environment.set('basicBronzePlanId', value); pm.environment.set('subscriptionPlanId', value); }",
                   "}"
                 ]
               }
@@ -1992,7 +2024,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Gold Dynamic\",\n  \"description\": \"Immigration consultants plan\",\n  \"priceInPaise\": 500000,\n  \"currency\": \"INR\",\n  \"billingPeriod\": \"MONTHLY\",\n  \"durationDays\": 30,\n  \"maxPublicServices\": 10,\n  \"maxJobPosts\": 10,\n  \"jobPortalAccess\": true,\n  \"directLeadCreditPrice\": 10,\n  \"displayOrder\": 2,\n  \"isFeatured\": true,\n  \"categoryIds\": [\n    \"{{serviceCategoryId}}\"\n  ]\n}"
+              "raw": "{\n  \"name\": \"Basic Bronze Plan\",\n  \"description\": \"For agents starting with package marketplace creation.\",\n  \"salePriceInPaise\": 39900,\n  \"offerPriceInPaise\": 29900,\n  \"currency\": \"INR\",\n  \"billingCycle\": \"MONTHLY\",\n  \"durationDays\": 30,\n  \"trialDays\": 0,\n  \"includedCredits\": 100,\n  \"maxPackages\": 5,\n  \"maxJobPosts\": 2,\n  \"jobPortalAccess\": false,\n  \"directLeadPriceCredits\": 8,\n  \"priorityWeight\": 0,\n  \"isFeatured\": false,\n  \"displayOrder\": 1,\n  \"isActive\": true,\n  \"categoryIds\": [\"{{serviceCategoryId}}\"],\n  \"displayContent\": {\n    \"badgeText\": \"Starter\",\n    \"ribbonText\": null,\n    \"iconUrl\": \"\",\n    \"themeColor\": \"#8B4513\",\n    \"ctaButtonText\": \"Choose Basic Bronze\",\n    \"features\": [\n      { \"text\": \"Create up to 5 marketplace packages\", \"included\": true },\n      { \"text\": \"100 wallet credits included\", \"included\": true },\n      { \"text\": \"Standard marketplace visibility\", \"included\": true },\n      { \"text\": \"Direct contact after lead purchase\", \"included\": true },\n      { \"text\": \"Priority placement\", \"included\": false }\n    ]\n  },\n  \"rules\": { \"supportLevel\": \"EMAIL\", \"analyticsLevel\": \"BASIC\" }\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/super-admin/subscription-plans",
@@ -2003,6 +2035,62 @@
                 "super-admin",
                 "subscription-plans"
               ]
+            }
+          }
+        },
+        {
+          "name": "Create Advanced Silver Plan",
+          "event": [{
+            "listen": "test",
+            "script": {
+              "type": "text/javascript",
+              "exec": [
+                "if (pm.response.code < 300) {",
+                "  const data=pm.response.json().data; const value=data && data.id;",
+                "  if (value) { pm.environment.set('advancedSilverPlanId', value); pm.environment.set('subscriptionPlanId', value); }",
+                "}"
+              ]
+            }
+          }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Advanced Silver Plan\",\n  \"description\": \"For growing agencies that need more packages, leads, and visibility.\",\n  \"salePriceInPaise\": 79900,\n  \"offerPriceInPaise\": 59900,\n  \"currency\": \"INR\",\n  \"billingCycle\": \"MONTHLY\",\n  \"durationDays\": 30,\n  \"trialDays\": 0,\n  \"includedCredits\": 300,\n  \"maxPackages\": 20,\n  \"maxJobPosts\": 10,\n  \"jobPortalAccess\": true,\n  \"directLeadPriceCredits\": 6,\n  \"priorityWeight\": 50,\n  \"isFeatured\": true,\n  \"displayOrder\": 2,\n  \"isActive\": true,\n  \"categoryIds\": [\"{{serviceCategoryId}}\"],\n  \"displayContent\": {\n    \"badgeText\": \"Most Popular\",\n    \"ribbonText\": \"Best Value\",\n    \"iconUrl\": \"\",\n    \"themeColor\": \"#A7A9AC\",\n    \"ctaButtonText\": \"Choose Advanced Silver\",\n    \"features\": [\n      { \"text\": \"Create up to 20 marketplace packages\", \"included\": true },\n      { \"text\": \"300 wallet credits included\", \"included\": true },\n      { \"text\": \"Enhanced marketplace visibility\", \"included\": true },\n      { \"text\": \"Job portal access\", \"included\": true },\n      { \"text\": \"Priority email support\", \"included\": true }\n    ]\n  },\n  \"rules\": { \"supportLevel\": \"PRIORITY_EMAIL\", \"analyticsLevel\": \"ADVANCED\" }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/super-admin/subscription-plans",
+              "host": ["{{baseUrl}}"],
+              "path": ["super-admin", "subscription-plans"]
+            }
+          }
+        },
+        {
+          "name": "Create Premium Gold Plan",
+          "event": [{
+            "listen": "test",
+            "script": {
+              "type": "text/javascript",
+              "exec": [
+                "if (pm.response.code < 300) {",
+                "  const data=pm.response.json().data; const value=data && data.id;",
+                "  if (value) { pm.environment.set('premiumGoldPlanId', value); pm.environment.set('subscriptionPlanId', value); }",
+                "}"
+              ]
+            }
+          }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Premium Gold Plan\",\n  \"description\": \"For established agencies requiring maximum reach and premium support.\",\n  \"salePriceInPaise\": 149900,\n  \"offerPriceInPaise\": 119900,\n  \"currency\": \"INR\",\n  \"billingCycle\": \"MONTHLY\",\n  \"durationDays\": 30,\n  \"trialDays\": 0,\n  \"includedCredits\": 750,\n  \"maxPackages\": 50,\n  \"maxJobPosts\": 30,\n  \"jobPortalAccess\": true,\n  \"directLeadPriceCredits\": 4,\n  \"priorityWeight\": 100,\n  \"isFeatured\": false,\n  \"displayOrder\": 3,\n  \"isActive\": true,\n  \"categoryIds\": [\"{{serviceCategoryId}}\"],\n  \"displayContent\": {\n    \"badgeText\": \"Premium\",\n    \"ribbonText\": \"Maximum Reach\",\n    \"iconUrl\": \"\",\n    \"themeColor\": \"#D4AF37\",\n    \"ctaButtonText\": \"Choose Premium Gold\",\n    \"features\": [\n      { \"text\": \"Create up to 50 marketplace packages\", \"included\": true },\n      { \"text\": \"750 wallet credits included\", \"included\": true },\n      { \"text\": \"Premium marketplace visibility\", \"included\": true },\n      { \"text\": \"Highest listing priority\", \"included\": true },\n      { \"text\": \"Dedicated account support\", \"included\": true }\n    ]\n  },\n  \"rules\": { \"supportLevel\": \"DEDICATED\", \"analyticsLevel\": \"PREMIUM\" }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/super-admin/subscription-plans",
+              "host": ["{{baseUrl}}"],
+              "path": ["super-admin", "subscription-plans"]
             }
           }
         },
@@ -2126,6 +2214,35 @@
           }
         },
         {
+          "name": "List Subscription Purchases",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/super-admin/subscriptions?status=PENDING_PAYMENT&take=20&skip=0",
+              "host": ["{{baseUrl}}"],
+              "path": ["super-admin", "subscriptions"],
+              "query": [
+                { "key": "status", "value": "PENDING_PAYMENT" },
+                { "key": "take", "value": "20" },
+                { "key": "skip", "value": "0" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Subscription Purchase",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/super-admin/subscriptions/{{vendorSubscriptionId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["super-admin", "subscriptions", "{{vendorSubscriptionId}}"]
+            }
+          }
+        },
+        {
           "name": "Confirm Subscription Payment",
           "request": {
             "method": "POST",
@@ -2150,6 +2267,22 @@
                 "{{vendorSubscriptionId}}",
                 "confirm-payment"
               ]
+            }
+          }
+        },
+        {
+          "name": "Reject Subscription Payment",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"Manual payment could not be verified.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/super-admin/subscriptions/{{vendorSubscriptionId}}/reject-payment",
+              "host": ["{{baseUrl}}"],
+              "path": ["super-admin", "subscriptions", "{{vendorSubscriptionId}}", "reject-payment"]
             }
           }
         }
@@ -2206,6 +2339,18 @@
                 "subscriptions",
                 "checkout"
               ]
+            }
+          }
+        },
+        {
+          "name": "Get My Current Entitlements",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/vendor/subscriptions/entitlements",
+              "host": ["{{baseUrl}}"],
+              "path": ["vendor", "subscriptions", "entitlements"]
             }
           }
         },

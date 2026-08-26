@@ -4,7 +4,11 @@ import { validateRequest } from '../../middlewares/validation.middleware.js';
 import { createAdminSchema } from '../../validators/auth.validator.js';
 import * as superAdminController from '../../controllers/superAdmin.controller.js';
 import * as subscriptionController from '../../controllers/subscription.controller.js';
-import { confirmSubscriptionPaymentSchema } from '../../validators/subscription.validator.js';
+import {
+  confirmSubscriptionPaymentSchema,
+  listAdminSubscriptionsQuerySchema,
+  rejectSubscriptionPaymentSchema,
+} from '../../validators/subscription.validator.js';
 
 const router = Router();
 
@@ -19,6 +23,20 @@ router.post(
   '/admins',
   validateRequest(createAdminSchema),
   superAdminController.createAdmin,
+);
+
+router.get(
+  '/subscriptions',
+  validateRequest(listAdminSubscriptionsQuerySchema, 'query'),
+  subscriptionController.listAdminSubscriptions,
+);
+
+router.get('/subscriptions/:subscriptionId', subscriptionController.getAdminSubscription);
+
+router.post(
+  '/subscriptions/:subscriptionId/reject-payment',
+  validateRequest(rejectSubscriptionPaymentSchema),
+  subscriptionController.rejectPayment,
 );
 
 router.post(

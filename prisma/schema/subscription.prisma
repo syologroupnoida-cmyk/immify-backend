@@ -1,25 +1,31 @@
 model SubscriptionPlan {
-  id                    String                    @id @default(uuid())
-  name                  String
-  slug                  String                    @unique
-  description           String?
-  status                SubscriptionPlanStatus    @default(DRAFT)
-  priceInPaise          Int
-  currency              String                    @default("INR")
-  billingPeriod         SubscriptionBillingPeriod @default(MONTHLY)
-  durationDays          Int
-  maxPublicServices     Int?
-  maxJobPosts           Int?
-  jobPortalAccess       Boolean                   @default(false)
-  directLeadCreditPrice Int
-  displayOrder          Int                       @default(0)
-  isFeatured            Boolean                   @default(false)
-  createdByAdminId      String
-  updatedByAdminId      String?
-  activatedAt           DateTime?
-  archivedAt            DateTime?
-  createdAt             DateTime                  @default(now())
-  updatedAt             DateTime                  @updatedAt
+  id                     String                    @id @default(uuid())
+  name                   String
+  slug                   String                    @unique
+  description            String?
+  status                 SubscriptionPlanStatus    @default(DRAFT)
+  salePriceInPaise       Int                       @map("priceInPaise")
+  offerPriceInPaise      Int?
+  currency               String                    @default("INR")
+  billingCycle           SubscriptionBillingPeriod @default(MONTHLY) @map("billingPeriod")
+  durationDays           Int
+  trialDays              Int                       @default(0)
+  includedCredits        Int                       @default(0)
+  maxPackages            Int?                      @map("maxPublicServices")
+  maxJobPosts            Int?
+  jobPortalAccess        Boolean                   @default(false)
+  directLeadPriceCredits Int                       @map("directLeadCreditPrice")
+  priorityWeight         Int                       @default(0)
+  displayOrder           Int                       @default(0)
+  isFeatured             Boolean                   @default(false)
+  displayContent         Json
+  rules                  Json                      @default("{}")
+  createdByAdminId       String
+  updatedByAdminId       String?
+  activatedAt            DateTime?
+  archivedAt             DateTime?
+  createdAt              DateTime                  @default(now())
+  updatedAt              DateTime                  @updatedAt
 
   categories    SubscriptionPlanCategory[]
   subscriptions VendorSubscription[]
@@ -52,22 +58,25 @@ model VendorSubscription {
   cancellationReason String?
   autoRenew          Boolean                  @default(false)
 
-  planNameSnapshot              String
-  priceInPaiseSnapshot          Int
-  currencySnapshot              String
-  maxPublicServicesSnapshot     Int?
-  maxJobPostsSnapshot           Int?
-  jobPortalAccessSnapshot       Boolean
-  directLeadCreditPriceSnapshot Int
-  durationDaysSnapshot          Int
+  planNameSnapshot               String
+  salePriceInPaiseSnapshot       Int     @map("priceInPaiseSnapshot")
+  offerPriceInPaiseSnapshot      Int?
+  currencySnapshot               String
+  includedCreditsSnapshot        Int     @default(0)
+  maxPackagesSnapshot            Int?    @map("maxPublicServicesSnapshot")
+  maxJobPostsSnapshot            Int?
+  jobPortalAccessSnapshot        Boolean
+  directLeadPriceCreditsSnapshot Int     @map("directLeadCreditPriceSnapshot")
+  durationDaysSnapshot           Int
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  vendor     VendorProfile                @relation(fields: [vendorUserId], references: [userId], onDelete: Restrict)
-  plan       SubscriptionPlan             @relation(fields: [planId], references: [id], onDelete: Restrict)
-  categories VendorSubscriptionCategory[]
-  payments   SubscriptionPayment[]
+  vendor            VendorProfile                @relation(fields: [vendorUserId], references: [userId], onDelete: Restrict)
+  plan              SubscriptionPlan             @relation(fields: [planId], references: [id], onDelete: Restrict)
+  categories        VendorSubscriptionCategory[]
+  payments          SubscriptionPayment[]
+  creditTransaction VendorCreditTransaction?
 
   @@index([vendorUserId, status, expiresAt])
   @@index([planId, status])

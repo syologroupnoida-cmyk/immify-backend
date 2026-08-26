@@ -51,9 +51,10 @@ Notes:
 
 | Method | Path | Auth | Body |
 |---|---|---|---|
-| POST | `/uploads/image` | Bearer | `multipart/form-data`: `file` (binary), `purpose` (see below), `name?` |
+| POST | `/uploads/file` | Bearer | `multipart/form-data`: `file` (JPEG, PNG, WebP, or PDF), `purpose` (see below), `name?` |
+| POST | `/uploads/image` | Bearer | Backwards-compatible alias of `/uploads/file` |
 
-`purpose` enum: `kyc-pan`, `kyc-aadhaar`, `kyc-gst`, `kyc-cin`, `company-logo`, `avatar`, `favicon_icon`, `header_logo`, `other`.
+`purpose` enum: `kyc-pan`, `kyc-aadhaar`, `kyc-gst`, `kyc-cin`, `company-logo`, `avatar`, `favicon_icon`, `header_logo`, `lead-document`, `other`. PDFs are uploaded to Cloudinary as `raw` resources; images use the `image` resource type.
 
 ---
 
@@ -61,7 +62,8 @@ Notes:
 
 | Method | Path | Auth | Body |
 |---|---|---|---|
-| POST | `/leads` | Public; optional CLIENT bearer links ownership | `{ categoryId, serviceId, firstName, lastName?, email, phone, country?, state?, city?, message?, metadata? }` |
+| POST | `/leads` | Public; optional CLIENT bearer links ownership | Complete customer form as top-level JSON fields; every answer is persisted to its dedicated `leads` column and `termsAccepted` must be `true` |
+| GET | `/leads/form-config?categoryId=:categoryId&serviceId=:serviceId` | Public | Returns the complete customer lead form; category/service identify the lead but do not remove client fields |
 
 New global leads are always created as `PENDING`; public callers cannot set status, price, type, or vendor assignment.
 
@@ -103,6 +105,7 @@ New global leads are always created as `PENDING`; public callers cannot set stat
 | GET | `/vendor/leads/purchased/:leadId` | Full contact data for owning purchaser |
 | GET | `/vendor/credits` | Current balance and latest 50 ledger entries |
 | POST | `/vendor/subscriptions/checkout` | `{ planId, autoRenew? }`; creates PENDING_PAYMENT subscription and entitlement snapshots |
+| GET | `/vendor/subscriptions/entitlements` | Current active plan, allowed categories/services, package usage and remaining allowance |
 | GET | `/vendor/subscriptions` | Vendor subscription/payment history |
 | GET | `/vendor/subscriptions/:subscriptionId` | Vendor-owned subscription detail |
 | POST | `/vendor/service-listings` | Subscription-gated `{ categoryId, serviceId?, title, description?, dynamicData?, publish? }` |
@@ -123,6 +126,7 @@ New global leads are always created as `PENDING`; public callers cannot set stat
 | GET | `/admin/vendors` | Query: `kycStatus?, isActive?, search?, take?/skip? or page?/size?, sortBy?(createdAt\|updatedAt\|name), order?(asc\|desc)` |
 | GET | `/admin/vendors/:userId` | — |
 | GET | `/admin/leads` | Query: `status?, type?, categoryId?, serviceId?, take?, skip?` |
+| PATCH | `/admin/leads/:leadId/activate` | `{ creditCost, maxUnlocks, expiresAt? }`; the global lead expires automatically after `maxUnlocks` vendor purchases |
 | GET | `/admin/leads/:leadId` | — |
 | PATCH | `/admin/leads/:leadId/verify` | —; `PENDING -> VERIFIED` |
 | PATCH | `/admin/leads/:leadId/activate` | `{ creditCost, expiresAt? }`; `VERIFIED -> ACTIVE` |
@@ -148,6 +152,9 @@ New global leads are always created as `PENDING`; public callers cannot set stat
 | POST | `/super-admin/subscription-plans/:planId/deactivate` | Stop new purchases; active vendor snapshots remain valid |
 | POST | `/super-admin/subscription-plans/:planId/archive` | Permanently retire from new sales |
 | POST | `/super-admin/subscriptions/:subscriptionId/confirm-payment` | `{ providerPaymentId, provider? }`; manual verified-payment activation until gateway webhook is integrated |
+| GET | `/super-admin/subscriptions` | Purchase/payment queue; query `status?, vendorUserId?, planId?, take?, skip?` |
+| GET | `/super-admin/subscriptions/:subscriptionId` | Purchase, vendor, payment, category/service and credit-allocation detail |
+| POST | `/super-admin/subscriptions/:subscriptionId/reject-payment` | `{ reason }`; marks a pending payment and subscription as failed |
 
 ---
 

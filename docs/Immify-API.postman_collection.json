@@ -2419,7 +2419,7 @@
               "host": ["{{baseUrl}}"],
               "path": ["vendor", "subscriptions", "plans"]
             },
-            "description": "Returns active plans with vendor-specific button state. The current plan has action CURRENT_PLAN and canPurchase false; alternatives use UPDATE_NOW, or PURCHASE when no active plan exists."
+            "description": "Returns active plans with vendor-specific button state. The current plan has action CURRENT_PLAN and canPurchase false; alternatives use UPGRADE_NOW, or BUY when no active plan exists."
           }
         },
         {
@@ -2460,7 +2460,8 @@
                 "subscriptions",
                 "checkout"
               ]
-            }
+            },
+            "description": "Temporary pre-gateway flow: checkout immediately completes the vendor purchase and returns an ACTIVE subscription with paymentRequired false."
           }
         },
         {

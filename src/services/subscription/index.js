@@ -28,45 +28,37 @@ export const listAdminPlans = () => repo.listPlans();
 export const listPublicPlans = () => repo.listPlans({ status: 'ACTIVE' });
 
 export const listVendorPlans = async (vendorUserId) => {
+  const [items, currentSub] = await Promise.all([
+    repo.listPlans({ status: 'ACTIVE' }),
+    repo.getActiveSubscription(vendorUserId),
+  ]);
+  const currentPlanId = currentSub?.planId ?? null;
+  const enriched = items.map((plan) => {
+    const isCurrentPlan = plan.id === currentPlanId;
+    const action = isCurrentPlan ? 'CURRENT_PLAN' : currentSub ? 'UPGRADE_NOW' : 'BUY';
 
-    const items = await repo.listPlans({ status: 'ACTIVE' });
-    console.log('this is items',items)
-     if (!vendorUserId) {
     return {
-      items: items.map((plan) => ({ ...plan, isCurrentPlan: false, action: 'BUY' })),
-      total: items.length,
-      currentSubscription: null,
+      ...plan,
+      isCurrentPlan,
+      canPurchase: !isCurrentPlan,
+      action,
+      buttonLabel: isCurrentPlan ? 'Current Plan' : currentSub ? 'Upgrade Now' : 'Buy Now',
     };
-  };
-    const currentSub = await repo.getActiveSubscription(vendorUserId);
-    const isSubLive = currentSub && effectiveStatusFor(currentSub) === 'ACTIVE';
-    const currentPlanPrice = isSubLive ? (currentSub.plan?.offerPriceInPaise ?? 0) : null;
-    const currentPlanId = isSubLive ? currentSub.planId : null;
-    const enriched = items.map((plan) => {
-    let action;
-    let isCurrentPlan = false;
-
-    if (!isSubLive) {
-      // No active sub → any plan is a fresh buy.
-      action = 'BUY';
-    } else if (plan.id === currentPlanId) {
-      action = 'CURRENT';
-      isCurrentPlan = true;
-    } else if (plan.offerPriceInPaise > currentPlanPrice) {
-      action = 'UPGRADE_TO';
-    } else {
-      // Cheaper than or equal to the current plan — blocked by the same rule
-      // that guards POST /vendor/subscriptions/upgrade.
-      action = 'DOWNGRADE_BLOCKED';
-    }
-
-    return { ...plan, isCurrentPlan, action };
   });
 
   return {
     items: enriched,
     total: enriched.length,
-    currentSubscription: isSubLive ? decorate(currentSub) : null,
+    currentSubscription: currentSub
+      ? {
+          id: currentSub.id,
+          planId: currentSub.planId,
+          status: effectiveStatusFor(currentSub),
+          startsAt: currentSub.startsAt,
+          expiresAt: currentSub.expiresAt,
+          plan: currentSub.plan,
+        }
+      : null,
   };
 };
 export const getPublicPlan = async (id) => {
@@ -116,8 +108,23 @@ export const checkout = async ({ vendorUserId, payload }) => {
       subscriptionId: currentSubscription.id,
     });
   }
-  const subscription = await repo.checkout({ vendorUserId, plan, autoRenew: payload.autoRenew });
-  return { subscription, paymentRequired: true, paymentProvider: 'MANUAL', message: 'Awaiting verified payment confirmation.' };
+  const pendingSubscription = await repo.checkout({ vendorUserId, plan, autoRenew: payload.autoRenew });
+
+  // Temporary purchase flow until the payment gateway is integrated. Checkout
+  // immediately marks the generated payment as paid and activates the plan.
+  const result = await repo.confirmPayment({
+    subscriptionId: pendingSubscription.id,
+    providerPaymentId: `CHECKOUT-${pendingSubscription.id}`,
+    provider: 'CHECKOUT_BYPASS',
+  });
+  if (result.invalid) throw ApiError.conflict('The subscription checkout could not be activated.');
+
+  return {
+    subscription: result.subscription,
+    paymentRequired: false,
+    paymentProvider: 'CHECKOUT_BYPASS',
+    message: 'Subscription purchased and activated successfully.',
+  };
 };
 export const listMySubscriptions = (vendorUserId) => repo.listVendorSubscriptions(vendorUserId);
 export const getMySubscription = async ({ vendorUserId, id }) => {

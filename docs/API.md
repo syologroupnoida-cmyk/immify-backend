@@ -112,7 +112,7 @@ New global leads are always created as `PENDING`; public callers cannot set stat
 | GET | `/vendor/leads/purchased` | Query: `take?, skip?` |
 | GET | `/vendor/leads/purchased/:leadId` | Full contact data for owning purchaser |
 | GET | `/vendor/credits` | Current balance and latest 50 ledger entries |
-| POST | `/vendor/subscriptions/checkout` | `{ planId, autoRenew? }`; creates PENDING_PAYMENT subscription and entitlement snapshots |
+| POST | `/vendor/subscriptions/checkout` | `{ planId, autoRenew? }`; temporarily completes the purchase and activates the subscription immediately until payment-gateway integration |
 | GET | `/vendor/subscriptions/plans` | Active plans decorated for the logged-in vendor with `isCurrentPlan`, `canPurchase`, `action`, and `buttonLabel` |
 | GET | `/vendor/subscriptions/entitlements` | Current active plan, allowed categories/services, package usage and remaining allowance |
 | GET | `/vendor/subscriptions` | Vendor subscription/payment history |

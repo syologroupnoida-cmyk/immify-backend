@@ -48,7 +48,7 @@ export const listCategories = async () => {
 
 // Public catalog used by unauthenticated forms. Inactive categories and
 // services must never be offered as selectable options.
-export const listActiveCategoriesWithServices = async () => {
+export const listActiveCategories = async () => {
   return prisma.serviceCategory.findMany({
     where: { isActive: true },
     orderBy: { name: 'asc' },
@@ -57,16 +57,19 @@ export const listActiveCategoriesWithServices = async () => {
       name: true,
       slug: true,
       description: true,
-      services: {
-        where: { isActive: true },
-        orderBy: { name: 'asc' },
-        select: {
-          id: true,
-          categoryId: true,
-          name: true,
-          description: true,
-        },
-      },
+    },
+  });
+};
+
+export const listActiveServicesByCategory = async (categoryId) => {
+  return prisma.service.findMany({
+    where: { categoryId, isActive: true, category: { isActive: true } },
+    orderBy: { name: 'asc' },
+    select: {
+      id: true,
+      categoryId: true,
+      name: true,
+      description: true,
     },
   });
 };

@@ -1906,7 +1906,7 @@
       "name": "Public - Subscriptions & Listings",
       "item": [
         {
-          "name": "List Active Service Categories with Services",
+          "name": "List Active Service Categories",
           "request": {
             "method": "GET",
             "header": [],
@@ -1922,7 +1922,21 @@
             "auth": {
               "type": "noauth"
             },
-            "description": "Public endpoint for signup/KYC forms. Returns active service categories with their active child services; no authentication required."
+            "description": "Returns active service categories only, without nested services; no authentication required."
+          }
+        },
+        {
+          "name": "List Active Services by Category",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/service-categories/{{serviceCategoryId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["service-categories", "{{serviceCategoryId}}"]
+            },
+            "auth": { "type": "noauth" },
+            "description": "Returns only active services under the category. The data value is an empty array when no active services are found."
           }
         },
         {
@@ -1981,6 +1995,20 @@
             "auth": {
               "type": "noauth"
             }
+          }
+        },
+        {
+          "name": "List Approved Vendor Services by Category",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/service-listings/category/{{serviceCategoryId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["service-listings", "category", "{{serviceCategoryId}}"]
+            },
+            "auth": { "type": "noauth" },
+            "description": "Returns category information and approved vendor-created marketplace services backed by an active subscription containing this category."
           }
         }
       ]
@@ -2289,6 +2317,67 @@
       ]
     },
     {
+      "name": "Admin - Service Listing Review",
+      "auth": {
+        "type": "bearer",
+        "bearer": [
+          {
+            "key": "token",
+            "value": "{{adminAccessToken}}",
+            "type": "string"
+          }
+        ]
+      },
+      "item": [
+        {
+          "name": "List Pending Service Listings",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/service-listings?status=PENDING_REVIEW&take=20&skip=0",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "service-listings"],
+              "query": [
+                { "key": "status", "value": "PENDING_REVIEW" },
+                { "key": "take", "value": "20" },
+                { "key": "skip", "value": "0" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Approve Service Listing",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/service-listings/{{serviceListingId}}/approve",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "service-listings", "{{serviceListingId}}", "approve"]
+            },
+            "description": "Approves and publishes a pending listing after rechecking the vendor's subscription, category entitlement, and service limit."
+          }
+        },
+        {
+          "name": "Reject Service Listing",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"Please provide clearer pricing and service process details.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/service-listings/{{serviceListingId}}/reject",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "service-listings", "{{serviceListingId}}", "reject"]
+            }
+          }
+        }
+      ]
+    },
+    {
       "name": "Vendor - Subscriptions & Service Listings",
       "auth": {
         "type": "bearer",
@@ -2301,6 +2390,38 @@
         ]
       },
       "item": [
+        {
+          "name": "List Vendor Subscription Plans",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Vendor plan states are returned', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  const data = pm.response.json().data;",
+                  "  pm.expect(data).to.have.property('currentSubscription');",
+                  "  pm.expect(data.plans).to.be.an('array');",
+                  "  data.plans.forEach((plan) => {",
+                  "    pm.expect(plan).to.include.keys('isCurrentPlan', 'canPurchase', 'action', 'buttonLabel');",
+                  "  });",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/vendor/subscriptions/plans",
+              "host": ["{{baseUrl}}"],
+              "path": ["vendor", "subscriptions", "plans"]
+            },
+            "description": "Returns active plans with vendor-specific button state. The current plan has action CURRENT_PLAN and canPurchase false; alternatives use UPDATE_NOW, or PURCHASE when no active plan exists."
+          }
+        },
         {
           "name": "Create Subscription Checkout",
           "event": [
@@ -2390,7 +2511,7 @@
           }
         },
         {
-          "name": "Create Published Service Listing",
+          "name": "Create Service Listing Draft",
           "event": [
             {
               "listen": "test",
@@ -2415,7 +2536,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"categoryId\": \"{{serviceCategoryId}}\",\n  \"serviceId\": \"{{serviceId}}\",\n  \"title\": \"Express Entry Consultation\",\n  \"description\": \"Professional immigration consultation.\",\n  \"dynamicData\": {\n    \"country\": \"Canada\"\n  },\n  \"publish\": true\n}"
+              "raw": "{\n  \"categoryId\": \"{{serviceCategoryId}}\",\n  \"serviceId\": \"{{serviceId}}\",\n  \"title\": \"Canada Express Entry\",\n  \"description\": \"Complete immigration assistance\",\n  \"includes\": [\n    \"Profile assessment\",\n    \"Documentation support\",\n    \"Application submission\"\n  ],\n  \"priceInPaise\": 2500000,\n  \"currency\": \"INR\",\n  \"chargesIncludeGst\": true,\n  \"imageUrl\": \"https://example.com/service.jpg\",\n  \"overview\": \"Complete details about the service\",\n  \"process\": \"Assessment, documentation, submission and follow-up\",\n  \"pricingDetails\": \"Starting price; additional government fees may apply\",\n  \"termsAndConditions\": \"Cancellation and refund policy\",\n  \"dynamicData\": {\n    \"country\": \"Canada\"\n  }\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/vendor/service-listings",
@@ -2458,7 +2579,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"title\": \"Premium Express Entry Consultation\"\n}"
+              "raw": "{\n  \"title\": \"Premium Express Entry Consultation\",\n  \"priceInPaise\": 3000000,\n  \"currency\": \"INR\",\n  \"pricingDetails\": \"Updated starting price\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/vendor/service-listings/{{serviceListingId}}",
@@ -2474,21 +2595,12 @@
           }
         },
         {
-          "name": "Unpublish Service Listing",
+          "name": "Submit Service Listing for Admin Review",
           "request": {
-            "method": "PATCH",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"published\": false\n}"
-            },
+            "method": "POST",
+            "header": [],
             "url": {
-              "raw": "{{baseUrl}}/vendor/service-listings/{{serviceListingId}}/publication",
+              "raw": "{{baseUrl}}/vendor/service-listings/{{serviceListingId}}/submit",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -2496,37 +2608,10 @@
                 "vendor",
                 "service-listings",
                 "{{serviceListingId}}",
-                "publication"
+                "submit"
               ]
-            }
-          }
-        },
-        {
-          "name": "Publish Service Listing",
-          "request": {
-            "method": "PATCH",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"published\": true\n}"
             },
-            "url": {
-              "raw": "{{baseUrl}}/vendor/service-listings/{{serviceListingId}}/publication",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "vendor",
-                "service-listings",
-                "{{serviceListingId}}",
-                "publication"
-              ]
-            }
+            "description": "Moves a DRAFT or REJECTED listing to PENDING_REVIEW. The vendor must have an active subscription containing the listing category."
           }
         }
       ]

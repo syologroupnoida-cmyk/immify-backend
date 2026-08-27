@@ -136,16 +136,64 @@ export const getSubscriptionEntitlements = (vendorUserId) => prisma.vendorSubscr
 });
 
 export const findCatalogService = (serviceId, categoryId) => prisma.service.findFirst({ where: { id: serviceId, categoryId, isActive: true }, select: { id: true } });
-export const countPublishedListings = (vendorUserId) => prisma.vendorServiceListing.count({ where: { vendorUserId, isPublished: true } });
+export const countPublishedListings = (vendorUserId) => prisma.vendorServiceListing.count({ where: { vendorUserId, reviewStatus: 'APPROVED', isPublished: true } });
 export const createListing = (data) => prisma.vendorServiceListing.create({ data, include: { category: true, service: true } });
 export const listVendorListings = (vendorUserId) => prisma.vendorServiceListing.findMany({ where: { vendorUserId }, include: { category: true, service: true }, orderBy: { createdAt: 'desc' } });
 export const findVendorListing = (id, vendorUserId) => prisma.vendorServiceListing.findFirst({ where: { id, vendorUserId }, include: { category: true, service: true } });
+export const findListingById = (id) => prisma.vendorServiceListing.findUnique({ where: { id }, include: { category: true, service: true } });
 export const updateListing = (id, data) => prisma.vendorServiceListing.update({ where: { id }, data, include: { category: true, service: true } });
+export const listListingsForReview = async ({ status, vendorUserId, categoryId, take, skip }) => {
+  const where = { ...(status && { reviewStatus: status }), ...(vendorUserId && { vendorUserId }), ...(categoryId && { categoryId }) };
+  const [items, total] = await prisma.$transaction([
+    prisma.vendorServiceListing.findMany({
+      where,
+      include: { category: true, service: true, vendor: { select: { user: { select: { id: true, firstName: true, lastName: true, email: true, phone: true } } } } },
+      orderBy: [{ submittedAt: 'asc' }, { createdAt: 'asc' }], take, skip,
+    }),
+    prisma.vendorServiceListing.count({ where }),
+  ]);
+  return { items, total, take, skip };
+};
 export const listPublicListings = () => prisma.vendorServiceListing.findMany({
-  where: { isPublished: true, isVisible: true, vendor: { user: { isActive: true }, subscriptions: { some: { status: 'ACTIVE', startsAt: { lte: new Date() }, expiresAt: { gt: new Date() } } } } },
+  where: { reviewStatus: 'APPROVED', isPublished: true, isVisible: true, vendor: { user: { isActive: true }, subscriptions: { some: { status: 'ACTIVE', startsAt: { lte: new Date() }, expiresAt: { gt: new Date() } } } } },
   include: { category: true, service: true, vendor: { select: {
     user: { select: { id: true, firstName: true, lastName: true, avatarUrl: true } },
     subscriptions: { where: { status: 'ACTIVE', startsAt: { lte: new Date() }, expiresAt: { gt: new Date() } }, select: { categories: { select: { categoryId: true } } } },
   } } },
   orderBy: { createdAt: 'desc' },
 });
+
+export const listPublicListingsByCategory = async (categoryId) => {
+  const now = new Date();
+  const [category, listings] = await prisma.$transaction([
+    prisma.serviceCategory.findFirst({
+      where: { id: categoryId, isActive: true },
+      select: { id: true, name: true, slug: true, description: true },
+    }),
+    prisma.vendorServiceListing.findMany({
+      where: {
+        categoryId,
+        reviewStatus: 'APPROVED',
+        isPublished: true,
+        isVisible: true,
+        vendor: {
+          user: { isActive: true },
+          subscriptions: {
+            some: {
+              status: 'ACTIVE',
+              startsAt: { lte: now },
+              expiresAt: { gt: now },
+              categories: { some: { categoryId } },
+            },
+          },
+        },
+      },
+      include: {
+        service: { select: { id: true, name: true, description: true } },
+        vendor: { select: { user: { select: { id: true, firstName: true, lastName: true, avatarUrl: true } } } },
+      },
+      orderBy: { reviewedAt: 'desc' },
+    }),
+  ]);
+  return { category, listings };
+};

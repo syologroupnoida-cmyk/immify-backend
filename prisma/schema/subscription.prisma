@@ -118,17 +118,31 @@ model SubscriptionPayment {
 }
 
 model VendorServiceListing {
-  id           String   @id @default(uuid())
-  vendorUserId String
-  categoryId   String
-  serviceId    String?
-  title        String
-  description  String?
-  dynamicData  Json?
-  isPublished  Boolean  @default(false)
-  isVisible    Boolean  @default(false)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id                 String                     @id @default(uuid())
+  vendorUserId       String
+  categoryId         String
+  serviceId          String?
+  title              String?
+  description        String?
+  dynamicData        Json?
+  includes           Json?
+  chargesIncludeGst  Boolean?
+  imageUrl           String?
+  overview           String?
+  process            String?
+  priceInPaise       Int?
+  currency           String?                    @default("INR")
+  pricingDetails     String?
+  termsAndConditions String?
+  reviewStatus       ServiceListingReviewStatus @default(DRAFT)
+  submittedAt        DateTime?
+  reviewedAt         DateTime?
+  reviewedByAdminId  String?
+  rejectionReason    String?
+  isPublished        Boolean                    @default(false)
+  isVisible          Boolean                    @default(false)
+  createdAt          DateTime                   @default(now())
+  updatedAt          DateTime                   @updatedAt
 
   vendor   VendorProfile   @relation(fields: [vendorUserId], references: [userId], onDelete: Cascade)
   category ServiceCategory @relation(fields: [categoryId], references: [id], onDelete: Restrict)
@@ -137,5 +151,6 @@ model VendorServiceListing {
 
   @@index([vendorUserId, isPublished, isVisible])
   @@index([categoryId, isPublished, isVisible])
+  @@index([reviewStatus, submittedAt])
   @@map("vendor_service_listings")
 }

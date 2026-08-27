@@ -68,16 +68,44 @@ export const listAdminSubscriptionsQuerySchema = z.object({
 export const createServiceListingSchema = z.object({
   categoryId: id,
   serviceId: id.optional(),
-  title: z.string().trim().min(3).max(160),
+  title: z.string().trim().max(160).optional(),
   description: z.string().trim().max(5000).optional(),
+  includes: z.array(z.string().trim().min(1).max(500)).max(100).optional(),
+  chargesIncludeGst: z.boolean().optional(),
+  imageUrl: z.union([z.literal(''), z.string().trim().url().max(2000)]).optional(),
+  overview: z.string().trim().max(10000).optional(),
+  process: z.string().trim().max(10000).optional(),
+  priceInPaise: z.number().int().nonnegative().max(2147483647).optional(),
+  currency: z.string().trim().length(3).transform((value) => value.toUpperCase()).optional(),
+  pricingDetails: z.string().trim().max(10000).optional(),
+  termsAndConditions: z.string().trim().max(10000).optional(),
   dynamicData: z.record(z.unknown()).optional(),
-  publish: z.boolean().default(false),
 }).strict();
 
 export const updateServiceListingSchema = z.object({
-  title: z.string().trim().min(3).max(160).optional(),
+  serviceId: id.nullable().optional(),
+  title: z.string().trim().max(160).nullable().optional(),
   description: z.string().trim().max(5000).nullable().optional(),
+  includes: z.array(z.string().trim().min(1).max(500)).max(100).nullable().optional(),
+  chargesIncludeGst: z.boolean().nullable().optional(),
+  imageUrl: z.union([z.literal(''), z.string().trim().url().max(2000)]).nullable().optional(),
+  overview: z.string().trim().max(10000).nullable().optional(),
+  process: z.string().trim().max(10000).nullable().optional(),
+  priceInPaise: z.number().int().nonnegative().max(2147483647).nullable().optional(),
+  currency: z.string().trim().length(3).transform((value) => value.toUpperCase()).nullable().optional(),
+  pricingDetails: z.string().trim().max(10000).nullable().optional(),
+  termsAndConditions: z.string().trim().max(10000).nullable().optional(),
   dynamicData: z.record(z.unknown()).nullable().optional(),
 }).strict().refine((data) => Object.keys(data).length > 0, { message: 'At least one field is required' });
 
-export const setListingPublicationSchema = z.object({ published: z.boolean() }).strict();
+export const listServiceListingsForReviewSchema = z.object({
+  status: z.enum(['DRAFT', 'PENDING_REVIEW', 'APPROVED', 'REJECTED']).optional(),
+  vendorUserId: id.optional(),
+  categoryId: id.optional(),
+  take: z.coerce.number().int().min(1).max(100).default(20),
+  skip: z.coerce.number().int().min(0).default(0),
+}).strict();
+
+export const rejectServiceListingSchema = z.object({
+  reason: z.string().trim().min(3).max(2000),
+}).strict();

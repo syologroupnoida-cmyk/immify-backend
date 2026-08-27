@@ -81,6 +81,14 @@ New global leads are always created as `PENDING`; public callers cannot set stat
 | Method | Path | Auth | Notes |
 |---|---|---|---|
 | GET | `/service-listings` | Public | Only published listings backed by a currently active subscription and allowed category |
+| GET | `/service-listings/category/:categoryId` | Public | Category information with all approved vendor services under that category |
+
+## Public Service Categories — `/service-categories`
+
+| Method | Path | Auth | Notes |
+|---|---|---|---|
+| GET | `/service-categories` | Public | Lists active categories only (without nested services) |
+| GET | `/service-categories/:categoryId` | Public | Lists active services for the category; returns an empty array when none exist |
 
 ---
 
@@ -105,13 +113,26 @@ New global leads are always created as `PENDING`; public callers cannot set stat
 | GET | `/vendor/leads/purchased/:leadId` | Full contact data for owning purchaser |
 | GET | `/vendor/credits` | Current balance and latest 50 ledger entries |
 | POST | `/vendor/subscriptions/checkout` | `{ planId, autoRenew? }`; creates PENDING_PAYMENT subscription and entitlement snapshots |
+| GET | `/vendor/subscriptions/plans` | Active plans decorated for the logged-in vendor with `isCurrentPlan`, `canPurchase`, `action`, and `buttonLabel` |
 | GET | `/vendor/subscriptions/entitlements` | Current active plan, allowed categories/services, package usage and remaining allowance |
 | GET | `/vendor/subscriptions` | Vendor subscription/payment history |
 | GET | `/vendor/subscriptions/:subscriptionId` | Vendor-owned subscription detail |
-| POST | `/vendor/service-listings` | Subscription-gated `{ categoryId, serviceId?, title, description?, dynamicData?, publish? }` |
+| POST | `/vendor/service-listings` | Create a subscription-gated draft. Only `categoryId` is required; service details are optional. |
 | GET | `/vendor/service-listings` | Vendor listing dashboard |
-| PATCH | `/vendor/service-listings/:listingId` | Update listing content |
-| PATCH | `/vendor/service-listings/:listingId/publication` | `{ published }`; rechecks category and plan listing limit |
+| PATCH | `/vendor/service-listings/:listingId` | Update a draft/rejected listing |
+| POST | `/vendor/service-listings/:listingId/submit` | Submit a draft/rejected listing for admin review |
+
+Service listing fields: `categoryId`, `serviceId?`, `title?`, `description?`, `includes?`,
+`chargesIncludeGst?`, `imageUrl?`, `overview?`, `process?`, `priceInPaise?`, `currency?`, `pricingDetails?`,
+`termsAndConditions?`, and `dynamicData?`.
+
+### Admin service review — `/admin/service-listings`
+
+| Method | Path | Purpose |
+|---|---|---|
+| GET | `/admin/service-listings?status=PENDING_REVIEW` | Paginated review queue; also filters by vendor/category |
+| POST | `/admin/service-listings/:listingId/approve` | Approve and publish after rechecking subscription/category/plan limit |
+| POST | `/admin/service-listings/:listingId/reject` | Reject with `{ reason }` so the vendor can edit and resubmit |
 
 ---
 

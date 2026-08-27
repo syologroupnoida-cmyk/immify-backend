@@ -36,8 +36,10 @@ export const listCategories = async () => {
 };
 
 export const listPublicCategories = async () => {
-  return categoryRepo.listActiveCategoriesWithServices();
+  return categoryRepo.listActiveCategories();
 };
+
+export const listPublicServicesByCategory = (categoryId) => categoryRepo.listActiveServicesByCategory(categoryId);
 
 export const getCategory = async (id) => {
   const category = await categoryRepo.findCategoryById(id);

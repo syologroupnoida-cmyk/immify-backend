@@ -4,6 +4,14 @@ import * as repo from '../../repositories/subscription.repository.js';
 const slugify = (value) => value.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
 const unique = (values) => [...new Set(values)];
 
+const effectiveStatusFor = (subscription) => {
+  if (!subscription) return null;
+  if (subscription.status === 'ACTIVE' && new Date(subscription.expiresAt) < new Date()) {
+    return 'EXPIRED';
+  }
+  return subscription.status;
+};
+
 const assertCategories = async (categoryIds) => {
   const ids = unique(categoryIds);
   const valid = await repo.findActiveCategoryIds(ids);
@@ -18,6 +26,49 @@ export const createPlan = async ({ adminId, payload }) => {
 };
 export const listAdminPlans = () => repo.listPlans();
 export const listPublicPlans = () => repo.listPlans({ status: 'ACTIVE' });
+
+export const listVendorPlans = async (vendorUserId) => {
+
+    const items = await repo.listPlans({ status: 'ACTIVE' });
+    console.log('this is items',items)
+     if (!vendorUserId) {
+    return {
+      items: items.map((plan) => ({ ...plan, isCurrentPlan: false, action: 'BUY' })),
+      total: items.length,
+      currentSubscription: null,
+    };
+  };
+    const currentSub = await repo.getActiveSubscription(vendorUserId);
+    const isSubLive = currentSub && effectiveStatusFor(currentSub) === 'ACTIVE';
+    const currentPlanPrice = isSubLive ? (currentSub.plan?.offerPriceInPaise ?? 0) : null;
+    const currentPlanId = isSubLive ? currentSub.planId : null;
+    const enriched = items.map((plan) => {
+    let action;
+    let isCurrentPlan = false;
+
+    if (!isSubLive) {
+      // No active sub → any plan is a fresh buy.
+      action = 'BUY';
+    } else if (plan.id === currentPlanId) {
+      action = 'CURRENT';
+      isCurrentPlan = true;
+    } else if (plan.offerPriceInPaise > currentPlanPrice) {
+      action = 'UPGRADE_TO';
+    } else {
+      // Cheaper than or equal to the current plan — blocked by the same rule
+      // that guards POST /vendor/subscriptions/upgrade.
+      action = 'DOWNGRADE_BLOCKED';
+    }
+
+    return { ...plan, isCurrentPlan, action };
+  });
+
+  return {
+    items: enriched,
+    total: enriched.length,
+    currentSubscription: isSubLive ? decorate(currentSub) : null,
+  };
+};
 export const getPublicPlan = async (id) => {
   const plan = await repo.findPlan(id);
   if (!plan || plan.status !== 'ACTIVE') throw ApiError.notFound('Active subscription plan not found.');
@@ -58,6 +109,13 @@ export const checkout = async ({ vendorUserId, payload }) => {
     throw ApiError.forbidden('An active, KYC-approved vendor account is required to purchase a subscription.');
   }
   const plan = await getPublicPlan(payload.planId);
+  const currentSubscription = await repo.getActiveSubscription(vendorUserId);
+  if (currentSubscription?.planId === plan.id) {
+    throw ApiError.conflict('This is already your current active subscription plan.', {
+      code: 'PLAN_ALREADY_ACTIVE',
+      subscriptionId: currentSubscription.id,
+    });
+  }
   const subscription = await repo.checkout({ vendorUserId, plan, autoRenew: payload.autoRenew });
   return { subscription, paymentRequired: true, paymentProvider: 'MANUAL', message: 'Awaiting verified payment confirmation.' };
 };
@@ -125,28 +183,69 @@ const requireEntitlement = async ({ vendorUserId, categoryId, requireSlot = fals
 };
 
 export const createListing = async ({ vendorUserId, payload }) => {
-  await requireEntitlement({ vendorUserId, categoryId: payload.categoryId, requireSlot: payload.publish });
+  await requireEntitlement({ vendorUserId, categoryId: payload.categoryId });
   if (payload.serviceId && !(await repo.findCatalogService(payload.serviceId, payload.categoryId))) {
     throw ApiError.badRequest('The selected service does not belong to the selected active category.');
   }
-  const { publish, ...data } = payload;
-  return repo.createListing({ ...data, vendorUserId, isPublished: publish, isVisible: publish });
+  return repo.createListing({ ...payload, vendorUserId });
 };
 export const listMyListings = (vendorUserId) => repo.listVendorListings(vendorUserId);
 export const updateListing = async ({ vendorUserId, id, payload }) => {
   const listing = await repo.findVendorListing(id, vendorUserId);
   if (!listing) throw ApiError.notFound('Service listing not found.');
-  return repo.updateListing(id, payload);
+  if (!['DRAFT', 'REJECTED'].includes(listing.reviewStatus)) {
+    throw ApiError.conflict('Only draft or rejected service listings can be edited.');
+  }
+  if (payload.serviceId && !(await repo.findCatalogService(payload.serviceId, listing.categoryId))) {
+    throw ApiError.badRequest('The selected service does not belong to the listing category.');
+  }
+  return repo.updateListing(id, { ...payload, reviewStatus: 'DRAFT', rejectionReason: null, reviewedAt: null, reviewedByAdminId: null });
 };
-export const setListingPublication = async ({ vendorUserId, id, published }) => {
+export const submitListingForReview = async ({ vendorUserId, id }) => {
   const listing = await repo.findVendorListing(id, vendorUserId);
   if (!listing) throw ApiError.notFound('Service listing not found.');
-  if (published && !listing.isPublished) await requireEntitlement({ vendorUserId, categoryId: listing.categoryId, requireSlot: true });
-  return repo.updateListing(id, { isPublished: published, isVisible: published });
+  if (!['DRAFT', 'REJECTED'].includes(listing.reviewStatus)) {
+    throw ApiError.conflict('Only draft or rejected service listings can be submitted.');
+  }
+  await requireEntitlement({ vendorUserId, categoryId: listing.categoryId });
+  return repo.updateListing(id, {
+    reviewStatus: 'PENDING_REVIEW', submittedAt: new Date(), rejectionReason: null,
+    reviewedAt: null, reviewedByAdminId: null, isPublished: false, isVisible: false,
+  });
+};
+
+export const listListingsForReview = (query) => repo.listListingsForReview(query);
+export const approveListing = async ({ adminId, id }) => {
+  const listing = await repo.findListingById(id);
+  if (!listing) throw ApiError.notFound('Service listing not found.');
+  if (listing.reviewStatus !== 'PENDING_REVIEW') throw ApiError.conflict('Only pending service listings can be approved.');
+  await requireEntitlement({ vendorUserId: listing.vendorUserId, categoryId: listing.categoryId, requireSlot: true });
+  return repo.updateListing(id, {
+    reviewStatus: 'APPROVED', reviewedAt: new Date(), reviewedByAdminId: adminId,
+    rejectionReason: null, isPublished: true, isVisible: true,
+  });
+};
+export const rejectListing = async ({ adminId, id, reason }) => {
+  const listing = await repo.findListingById(id);
+  if (!listing) throw ApiError.notFound('Service listing not found.');
+  if (listing.reviewStatus !== 'PENDING_REVIEW') throw ApiError.conflict('Only pending service listings can be rejected.');
+  return repo.updateListing(id, {
+    reviewStatus: 'REJECTED', reviewedAt: new Date(), reviewedByAdminId: adminId,
+    rejectionReason: reason, isPublished: false, isVisible: false,
+  });
 };
 export const listPublicListings = async () => {
   const listings = await repo.listPublicListings();
   return listings
     .filter((listing) => listing.vendor.subscriptions.some((sub) => sub.categories.some((item) => item.categoryId === listing.categoryId)))
     .map(({ vendor, ...listing }) => ({ ...listing, vendor: vendor.user }));
+};
+
+export const listPublicListingsByCategory = async (categoryId) => {
+  const result = await repo.listPublicListingsByCategory(categoryId);
+  if (!result.category) throw ApiError.notFound('Active service category not found.');
+  return {
+    category: result.category,
+    services: result.listings.map(({ vendor, ...listing }) => ({ ...listing, vendor: vendor.user })),
+  };
 };

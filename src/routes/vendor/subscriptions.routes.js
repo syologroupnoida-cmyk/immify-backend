@@ -4,6 +4,7 @@ import { checkoutSubscriptionSchema } from '../../validators/subscription.valida
 import * as controller from '../../controllers/subscription.controller.js';
 const router = Router();
 router.post('/checkout', validateRequest(checkoutSubscriptionSchema), controller.checkout);
+router.get('/plans', controller.listVendorPlans);
 router.get('/current', controller.getMyEntitlements);
 router.get('/', controller.listMySubscriptions);
 router.get('/:subscriptionId', controller.getMySubscription);

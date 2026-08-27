@@ -119,3 +119,10 @@ enum SubscriptionBillingPeriod {
   HALF_YEARLY
   YEARLY
 }
+
+enum ServiceListingReviewStatus {
+  DRAFT
+  PENDING_REVIEW
+  APPROVED
+  REJECTED
+}

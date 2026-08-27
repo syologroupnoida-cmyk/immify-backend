@@ -1,27 +1,228 @@
-import { asyncHandler } from '../utils/asyncHandler.js';
-import { sendSuccess } from '../utils/response.js';
-import * as service from '../services/subscription/index.js';
+import { asyncHandler } from "../utils/asyncHandler.js";
+import { sendSuccess } from "../utils/response.js";
+import * as service from "../services/subscription/index.js";
 
-const ok = (res, message, data, statusCode = 200) => sendSuccess(res, { statusCode, message, data });
-export const createPlan = asyncHandler(async (req, res) => ok(res, 'Subscription plan created.', await service.createPlan({ adminId: req.user.id, payload: req.body }), 201));
-export const listAdminPlans = asyncHandler(async (_req, res) => ok(res, 'Subscription plans retrieved.', await service.listAdminPlans()));
-export const getAdminPlan = asyncHandler(async (req, res) => ok(res, 'Subscription plan retrieved.', await service.getAdminPlan(req.params.planId)));
-export const updatePlan = asyncHandler(async (req, res) => ok(res, 'Subscription plan updated.', await service.updatePlan({ id: req.params.planId, adminId: req.user.id, payload: req.body })));
-export const activatePlan = asyncHandler(async (req, res) => ok(res, 'Subscription plan activated.', await service.activatePlan(req.params.planId)));
-export const deactivatePlan = asyncHandler(async (req, res) => ok(res, 'Subscription plan deactivated.', await service.deactivatePlan(req.params.planId)));
-export const archivePlan = asyncHandler(async (req, res) => ok(res, 'Subscription plan archived.', await service.archivePlan(req.params.planId)));
-export const listPublicPlans = asyncHandler(async (_req, res) => ok(res, 'Active subscription plans retrieved.', await service.listPublicPlans()));
-export const getPublicPlan = asyncHandler(async (req, res) => ok(res, 'Subscription plan retrieved.', await service.getPublicPlan(req.params.planId)));
-export const checkout = asyncHandler(async (req, res) => ok(res, 'Subscription checkout created.', await service.checkout({ vendorUserId: req.user.id, payload: req.body }), 201));
-export const listMySubscriptions = asyncHandler(async (req, res) => ok(res, 'Subscriptions retrieved.', await service.listMySubscriptions(req.user.id)));
-export const getMySubscription = asyncHandler(async (req, res) => ok(res, 'Subscription retrieved.', await service.getMySubscription({ vendorUserId: req.user.id, id: req.params.subscriptionId })));
-export const getMyEntitlements = asyncHandler(async (req, res) => ok(res, 'Current subscription entitlements retrieved.', await service.getMyEntitlements(req.user.id)));
-export const listAdminSubscriptions = asyncHandler(async (req, res) => ok(res, 'Subscription purchases retrieved.', await service.listAdminSubscriptions(req.query)));
-export const getAdminSubscription = asyncHandler(async (req, res) => ok(res, 'Subscription purchase retrieved.', await service.getAdminSubscription(req.params.subscriptionId)));
-export const confirmPayment = asyncHandler(async (req, res) => ok(res, 'Payment confirmed and subscription activated.', await service.confirmPayment({ subscriptionId: req.params.subscriptionId, payload: req.body })));
-export const rejectPayment = asyncHandler(async (req, res) => ok(res, 'Payment rejected.', await service.rejectPayment({ subscriptionId: req.params.subscriptionId, reason: req.body.reason })));
-export const createListing = asyncHandler(async (req, res) => ok(res, 'Service listing created.', await service.createListing({ vendorUserId: req.user.id, payload: req.body }), 201));
-export const listMyListings = asyncHandler(async (req, res) => ok(res, 'Service listings retrieved.', await service.listMyListings(req.user.id)));
-export const updateListing = asyncHandler(async (req, res) => ok(res, 'Service listing updated.', await service.updateListing({ vendorUserId: req.user.id, id: req.params.listingId, payload: req.body })));
-export const setListingPublication = asyncHandler(async (req, res) => ok(res, 'Service listing publication updated.', await service.setListingPublication({ vendorUserId: req.user.id, id: req.params.listingId, published: req.body.published })));
-export const listPublicListings = asyncHandler(async (_req, res) => ok(res, 'Public service listings retrieved.', await service.listPublicListings()));
+const ok = (res, message, data, statusCode = 200) =>
+  sendSuccess(res, { statusCode, message, data });
+export const createPlan = asyncHandler(async (req, res) =>
+  ok(
+    res,
+    "Subscription plan created.",
+    await service.createPlan({ adminId: req.user.id, payload: req.body }),
+    201,
+  ),
+);
+export const listAdminPlans = asyncHandler(async (_req, res) =>
+  ok(res, "Subscription plans retrieved.", await service.listAdminPlans()),
+);
+export const getAdminPlan = asyncHandler(async (req, res) =>
+  ok(
+    res,
+    "Subscription plan retrieved.",
+    await service.getAdminPlan(req.params.planId),
+  ),
+);
+export const updatePlan = asyncHandler(async (req, res) =>
+  ok(
+    res,
+    "Subscription plan updated.",
+    await service.updatePlan({
+      id: req.params.planId,
+      adminId: req.user.id,
+      payload: req.body,
+    }),
+  ),
+);
+export const activatePlan = asyncHandler(async (req, res) =>
+  ok(
+    res,
+    "Subscription plan activated.",
+    await service.activatePlan(req.params.planId),
+  ),
+);
+export const deactivatePlan = asyncHandler(async (req, res) =>
+  ok(
+    res,
+    "Subscription plan deactivated.",
+    await service.deactivatePlan(req.params.planId),
+  ),
+);
+export const archivePlan = asyncHandler(async (req, res) =>
+  ok(
+    res,
+    "Subscription plan archived.",
+    await service.archivePlan(req.params.planId),
+  ),
+);
+export const listPublicPlans = asyncHandler(async (_req, res) =>
+  ok(
+    res,
+    "Active subscription plans retrieved.",
+    await service.listPublicPlans(),
+  ),
+);
+
+export const listVendorPlans = asyncHandler(async (req, res) =>
+{  
+   const data = await service.listVendorPlans(req.user?.id ?? null);
+     return sendSuccess(res, {
+    statusCode: 200,
+    message: 'Available subscription plans retrieved.',
+    data,
+  });
+});
+
+export const getPublicPlan = asyncHandler(async (req, res) =>
+  ok(
+    res,
+    "Subscription plan retrieved.",
+    await service.getPublicPlan(req.params.planId),
+  ),
+);
+export const checkout = asyncHandler(async (req, res) =>
+  ok(
+    res,
+    "Subscription checkout created.",
+    await service.checkout({ vendorUserId: req.user.id, payload: req.body }),
+    201,
+  ),
+);
+export const listMySubscriptions = asyncHandler(async (req, res) =>
+  ok(
+    res,
+    "Subscriptions retrieved.",
+    await service.listMySubscriptions(req.user.id),
+  ),
+);
+export const getMySubscription = asyncHandler(async (req, res) =>
+  ok(
+    res,
+    "Subscription retrieved.",
+    await service.getMySubscription({
+      vendorUserId: req.user.id,
+      id: req.params.subscriptionId,
+    }),
+  ),
+);
+export const getMyEntitlements = asyncHandler(async (req, res) =>
+  ok(
+    res,
+    "Current subscription entitlements retrieved.",
+    await service.getMyEntitlements(req.user.id),
+  ),
+);
+export const listAdminSubscriptions = asyncHandler(async (req, res) =>
+  ok(
+    res,
+    "Subscription purchases retrieved.",
+    await service.listAdminSubscriptions(req.query),
+  ),
+);
+export const getAdminSubscription = asyncHandler(async (req, res) =>
+  ok(
+    res,
+    "Subscription purchase retrieved.",
+    await service.getAdminSubscription(req.params.subscriptionId),
+  ),
+);
+export const confirmPayment = asyncHandler(async (req, res) =>
+  ok(
+    res,
+    "Payment confirmed and subscription activated.",
+    await service.confirmPayment({
+      subscriptionId: req.params.subscriptionId,
+      payload: req.body,
+    }),
+  ),
+);
+export const rejectPayment = asyncHandler(async (req, res) =>
+  ok(
+    res,
+    "Payment rejected.",
+    await service.rejectPayment({
+      subscriptionId: req.params.subscriptionId,
+      reason: req.body.reason,
+    }),
+  ),
+);
+export const createListing = asyncHandler(async (req, res) =>
+  ok(
+    res,
+    "Service listing created.",
+    await service.createListing({
+      vendorUserId: req.user.id,
+      payload: req.body,
+    }),
+    201,
+  ),
+);
+export const listMyListings = asyncHandler(async (req, res) =>
+  ok(
+    res,
+    "Service listings retrieved.",
+    await service.listMyListings(req.user.id),
+  ),
+);
+export const updateListing = asyncHandler(async (req, res) =>
+  ok(
+    res,
+    "Service listing updated.",
+    await service.updateListing({
+      vendorUserId: req.user.id,
+      id: req.params.listingId,
+      payload: req.body,
+    }),
+  ),
+);
+export const submitListingForReview = asyncHandler(async (req, res) =>
+  ok(
+    res,
+    "Service listing submitted for admin review.",
+    await service.submitListingForReview({
+      vendorUserId: req.user.id,
+      id: req.params.listingId,
+    }),
+  ),
+);
+export const listListingsForReview = asyncHandler(async (req, res) =>
+  ok(
+    res,
+    "Service listings retrieved for review.",
+    await service.listListingsForReview(req.query),
+  ),
+);
+export const approveListing = asyncHandler(async (req, res) =>
+  ok(
+    res,
+    "Service listing approved and published.",
+    await service.approveListing({
+      adminId: req.user.id,
+      id: req.params.listingId,
+    }),
+  ),
+);
+export const rejectListing = asyncHandler(async (req, res) =>
+  ok(
+    res,
+    "Service listing rejected.",
+    await service.rejectListing({
+      adminId: req.user.id,
+      id: req.params.listingId,
+      reason: req.body.reason,
+    }),
+  ),
+);
+export const listPublicListings = asyncHandler(async (_req, res) =>
+  ok(
+    res,
+    "Public service listings retrieved.",
+    await service.listPublicListings(),
+  ),
+);
+export const listPublicListingsByCategory = asyncHandler(async (req, res) =>
+  ok(
+    res,
+    "Public services for category retrieved.",
+    await service.listPublicListingsByCategory(req.params.categoryId),
+  ),
+);

@@ -15,12 +15,8 @@ export const getFormConfig = async ({ categoryId, serviceId }) => {
 
 export const createGlobalLead = async ({ clientUserId, payload }) => {
   await getSelectedService(payload.categoryId, payload.serviceId);
-  const { passportAvailable, dateOfBirth, passportExpiry, ...leadFields } = payload;
   return leadRepo.createGlobalLead({
-    ...leadFields,
-    dateOfBirth: dateOfBirth ? new Date(`${dateOfBirth}T00:00:00.000Z`) : null,
-    passportAvailable: passportAvailable === undefined ? null : passportAvailable === 'Yes',
-    passportExpiry: passportExpiry ? new Date(`${passportExpiry}T00:00:00.000Z`) : null,
+    ...payload,
     clientUserId: clientUserId ?? null,
   });
 };

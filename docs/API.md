@@ -62,7 +62,7 @@ Notes:
 
 | Method | Path | Auth | Body |
 |---|---|---|---|
-| POST | `/leads` | Public; optional CLIENT bearer links ownership | Complete customer form as top-level JSON fields; every answer is persisted to its dedicated `leads` column and `termsAccepted` must be `true` |
+| POST | `/leads` | Public; optional CLIENT bearer links ownership | Common fields `{ categoryId, serviceId, firstName, lastName?, email, phone, country?, state?, city?, message? }`; detailed and future form fields go in JSON `metadata`, where `termsAccepted` must be `true` |
 | GET | `/leads/form-config?categoryId=:categoryId&serviceId=:serviceId` | Public | Returns the complete customer lead form; category/service identify the lead but do not remove client fields |
 
 New global leads are always created as `PENDING`; public callers cannot set status, price, type, or vendor assignment.

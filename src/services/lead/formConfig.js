@@ -1,6 +1,6 @@
 const option = (value, label = value) => ({ value, label });
 const options = (values) => values.map((value) => option(value));
-const field = (name, label, type = 'text', extra = {}) => ({ name, label, type, storage: 'lead', ...extra });
+const field = (name, label, type = 'text', extra = {}) => ({ name, label, type, storage: 'metadata', ...extra });
 
 const SECTIONS = {
   personalInformation: {

@@ -18,56 +18,6 @@ model Lead {
   message   String?
   metadata  Json?
 
-  whatsappNumber String?
-  gender         String?
-  dateOfBirth    DateTime? @db.Date
-  maritalStatus  String?
-  nationality    String?
-
-  servicesRequired     String[] @default([])
-  destinationCountries String[] @default([])
-
-  highestQualification String?
-  passingYear          Int?
-  university           String?
-  percentageOrCgpa     String?
-
-  currentCompany     String?
-  currentDesignation String?
-  industry           String?
-  yearsOfExperience  Float?
-  currentSalary      String?
-  relevantExperience String?
-
-  languageTestTaken String?
-  overallScore      String?
-  listeningScore    String?
-  readingScore      String?
-  writingScore      String?
-  speakingScore     String?
-
-  passportAvailable Boolean?
-  passportExpiry    DateTime? @db.Date
-
-  familyMaritalStatus String?
-  spouseQualification String?
-  children            Int?
-  dependents          Int?
-
-  investmentBudget    String?
-  applicationTimeline String?
-
-  resumeUrl                  String?
-  passportDocumentUrl        String?
-  ieltsDocumentUrl           String?
-  educationalCertificateUrls String[] @default([])
-  experienceLetterUrls       String[] @default([])
-  bankStatementUrl           String?
-  additionalInformation      String?
-
-  consentToCalls Boolean @default(false)
-  termsAccepted  Boolean @default(false)
-
   creditCost        Int?
   maxUnlocks        Int?
   unlockCount       Int       @default(0)

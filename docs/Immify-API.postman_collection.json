@@ -1932,10 +1932,17 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/service-categories/{{serviceCategoryId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["service-categories", "{{serviceCategoryId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "service-categories",
+                "{{serviceCategoryId}}"
+              ]
             },
-            "auth": { "type": "noauth" },
+            "auth": {
+              "type": "noauth"
+            },
             "description": "Returns only active services under the category. The data value is an empty array when no active services are found."
           }
         },
@@ -2004,10 +2011,18 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/service-listings/category/{{serviceCategoryId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["service-listings", "category", "{{serviceCategoryId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "service-listings",
+                "category",
+                "{{serviceCategoryId}}"
+              ]
             },
-            "auth": { "type": "noauth" },
+            "auth": {
+              "type": "noauth"
+            },
             "description": "Returns category information and approved vendor-created marketplace services backed by an active subscription containing this category."
           }
         }
@@ -2068,57 +2083,81 @@
         },
         {
           "name": "Create Advanced Silver Plan",
-          "event": [{
-            "listen": "test",
-            "script": {
-              "type": "text/javascript",
-              "exec": [
-                "if (pm.response.code < 300) {",
-                "  const data=pm.response.json().data; const value=data && data.id;",
-                "  if (value) { pm.environment.set('advancedSilverPlanId', value); pm.environment.set('subscriptionPlanId', value); }",
-                "}"
-              ]
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code < 300) {",
+                  "  const data=pm.response.json().data; const value=data && data.id;",
+                  "  if (value) { pm.environment.set('advancedSilverPlanId', value); pm.environment.set('subscriptionPlanId', value); }",
+                  "}"
+                ]
+              }
             }
-          }],
+          ],
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"name\": \"Advanced Silver Plan\",\n  \"description\": \"For growing agencies that need more packages, leads, and visibility.\",\n  \"salePriceInPaise\": 79900,\n  \"offerPriceInPaise\": 59900,\n  \"currency\": \"INR\",\n  \"billingCycle\": \"MONTHLY\",\n  \"durationDays\": 30,\n  \"trialDays\": 0,\n  \"includedCredits\": 300,\n  \"maxPackages\": 20,\n  \"maxJobPosts\": 10,\n  \"jobPortalAccess\": true,\n  \"directLeadPriceCredits\": 6,\n  \"priorityWeight\": 50,\n  \"isFeatured\": true,\n  \"displayOrder\": 2,\n  \"isActive\": true,\n  \"categoryIds\": [\"{{serviceCategoryId}}\"],\n  \"displayContent\": {\n    \"badgeText\": \"Most Popular\",\n    \"ribbonText\": \"Best Value\",\n    \"iconUrl\": \"\",\n    \"themeColor\": \"#A7A9AC\",\n    \"ctaButtonText\": \"Choose Advanced Silver\",\n    \"features\": [\n      { \"text\": \"Create up to 20 marketplace packages\", \"included\": true },\n      { \"text\": \"300 wallet credits included\", \"included\": true },\n      { \"text\": \"Enhanced marketplace visibility\", \"included\": true },\n      { \"text\": \"Job portal access\", \"included\": true },\n      { \"text\": \"Priority email support\", \"included\": true }\n    ]\n  },\n  \"rules\": { \"supportLevel\": \"PRIORITY_EMAIL\", \"analyticsLevel\": \"ADVANCED\" }\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/super-admin/subscription-plans",
-              "host": ["{{baseUrl}}"],
-              "path": ["super-admin", "subscription-plans"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "super-admin",
+                "subscription-plans"
+              ]
             }
           }
         },
         {
           "name": "Create Premium Gold Plan",
-          "event": [{
-            "listen": "test",
-            "script": {
-              "type": "text/javascript",
-              "exec": [
-                "if (pm.response.code < 300) {",
-                "  const data=pm.response.json().data; const value=data && data.id;",
-                "  if (value) { pm.environment.set('premiumGoldPlanId', value); pm.environment.set('subscriptionPlanId', value); }",
-                "}"
-              ]
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code < 300) {",
+                  "  const data=pm.response.json().data; const value=data && data.id;",
+                  "  if (value) { pm.environment.set('premiumGoldPlanId', value); pm.environment.set('subscriptionPlanId', value); }",
+                  "}"
+                ]
+              }
             }
-          }],
+          ],
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"name\": \"Premium Gold Plan\",\n  \"description\": \"For established agencies requiring maximum reach and premium support.\",\n  \"salePriceInPaise\": 149900,\n  \"offerPriceInPaise\": 119900,\n  \"currency\": \"INR\",\n  \"billingCycle\": \"MONTHLY\",\n  \"durationDays\": 30,\n  \"trialDays\": 0,\n  \"includedCredits\": 750,\n  \"maxPackages\": 50,\n  \"maxJobPosts\": 30,\n  \"jobPortalAccess\": true,\n  \"directLeadPriceCredits\": 4,\n  \"priorityWeight\": 100,\n  \"isFeatured\": false,\n  \"displayOrder\": 3,\n  \"isActive\": true,\n  \"categoryIds\": [\"{{serviceCategoryId}}\"],\n  \"displayContent\": {\n    \"badgeText\": \"Premium\",\n    \"ribbonText\": \"Maximum Reach\",\n    \"iconUrl\": \"\",\n    \"themeColor\": \"#D4AF37\",\n    \"ctaButtonText\": \"Choose Premium Gold\",\n    \"features\": [\n      { \"text\": \"Create up to 50 marketplace packages\", \"included\": true },\n      { \"text\": \"750 wallet credits included\", \"included\": true },\n      { \"text\": \"Premium marketplace visibility\", \"included\": true },\n      { \"text\": \"Highest listing priority\", \"included\": true },\n      { \"text\": \"Dedicated account support\", \"included\": true }\n    ]\n  },\n  \"rules\": { \"supportLevel\": \"DEDICATED\", \"analyticsLevel\": \"PREMIUM\" }\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/super-admin/subscription-plans",
-              "host": ["{{baseUrl}}"],
-              "path": ["super-admin", "subscription-plans"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "super-admin",
+                "subscription-plans"
+              ]
             }
           }
         },
@@ -2248,12 +2287,26 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/super-admin/subscriptions?status=PENDING_PAYMENT&take=20&skip=0",
-              "host": ["{{baseUrl}}"],
-              "path": ["super-admin", "subscriptions"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "super-admin",
+                "subscriptions"
+              ],
               "query": [
-                { "key": "status", "value": "PENDING_PAYMENT" },
-                { "key": "take", "value": "20" },
-                { "key": "skip", "value": "0" }
+                {
+                  "key": "status",
+                  "value": "PENDING_PAYMENT"
+                },
+                {
+                  "key": "take",
+                  "value": "20"
+                },
+                {
+                  "key": "skip",
+                  "value": "0"
+                }
               ]
             }
           }
@@ -2265,8 +2318,14 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/super-admin/subscriptions/{{vendorSubscriptionId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["super-admin", "subscriptions", "{{vendorSubscriptionId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "super-admin",
+                "subscriptions",
+                "{{vendorSubscriptionId}}"
+              ]
             }
           }
         },
@@ -2302,15 +2361,27 @@
           "name": "Reject Subscription Payment",
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"reason\": \"Manual payment could not be verified.\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/super-admin/subscriptions/{{vendorSubscriptionId}}/reject-payment",
-              "host": ["{{baseUrl}}"],
-              "path": ["super-admin", "subscriptions", "{{vendorSubscriptionId}}", "reject-payment"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "super-admin",
+                "subscriptions",
+                "{{vendorSubscriptionId}}",
+                "reject-payment"
+              ]
             }
           }
         }
@@ -2336,12 +2407,26 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/admin/service-listings?status=PENDING_REVIEW&take=20&skip=0",
-              "host": ["{{baseUrl}}"],
-              "path": ["admin", "service-listings"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "service-listings"
+              ],
               "query": [
-                { "key": "status", "value": "PENDING_REVIEW" },
-                { "key": "take", "value": "20" },
-                { "key": "skip", "value": "0" }
+                {
+                  "key": "status",
+                  "value": "PENDING_REVIEW"
+                },
+                {
+                  "key": "take",
+                  "value": "20"
+                },
+                {
+                  "key": "skip",
+                  "value": "0"
+                }
               ]
             }
           }
@@ -2353,8 +2438,15 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/admin/service-listings/{{serviceListingId}}/approve",
-              "host": ["{{baseUrl}}"],
-              "path": ["admin", "service-listings", "{{serviceListingId}}", "approve"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "service-listings",
+                "{{serviceListingId}}",
+                "approve"
+              ]
             },
             "description": "Approves and publishes a pending listing after rechecking the vendor's subscription, category entitlement, and service limit."
           }
@@ -2363,15 +2455,27 @@
           "name": "Reject Service Listing",
           "request": {
             "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"reason\": \"Please provide clearer pricing and service process details.\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/admin/service-listings/{{serviceListingId}}/reject",
-              "host": ["{{baseUrl}}"],
-              "path": ["admin", "service-listings", "{{serviceListingId}}", "reject"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "service-listings",
+                "{{serviceListingId}}",
+                "reject"
+              ]
             }
           }
         }
@@ -2416,8 +2520,14 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/vendor/subscriptions/plans",
-              "host": ["{{baseUrl}}"],
-              "path": ["vendor", "subscriptions", "plans"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "vendor",
+                "subscriptions",
+                "plans"
+              ]
             },
             "description": "Returns active plans with vendor-specific button state. The current plan has action CURRENT_PLAN and canPurchase false; alternatives use UPGRADE_NOW, or BUY when no active plan exists."
           }
@@ -2470,10 +2580,17 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{baseUrl}}/vendor/subscriptions/entitlements",
-              "host": ["{{baseUrl}}"],
-              "path": ["vendor", "subscriptions", "entitlements"]
-            }
+              "raw": "{{baseUrl}}/vendor/subscriptions/current",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "vendor",
+                "subscriptions",
+                "current"
+              ]
+            },
+            "description": "Returns current package and job-posting entitlements, usage, and remaining limits."
           }
         },
         {
@@ -2613,6 +2730,451 @@
               ]
             },
             "description": "Moves a DRAFT or REJECTED listing to PENDING_REVIEW. The vendor must have an active subscription containing the listing category."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Vendor - Job Listings",
+      "auth": {
+        "type": "bearer",
+        "bearer": [
+          {
+            "key": "token",
+            "value": "{{vendorAccessToken}}",
+            "type": "string"
+          }
+        ]
+      },
+      "item": [
+        {
+          "name": "Create Job Listing Draft",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code < 300) {",
+                  "  const data = pm.response.json().data;",
+                  "  if (data && data.id) pm.environment.set('jobListingId', data.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"country\": \"UAE\",\n  \"cityRegion\": \"Dubai\",\n  \"title\": \"Software Engineer\",\n  \"industry\": \"IT / Technology\",\n  \"qualification\": \"Bachelor's in CS/IT\",\n  \"experience\": \"2-5 years\",\n  \"indicativeSalary\": \"AED 10,000-18,000/month\",\n  \"employmentType\": \"Full-time\",\n  \"visaWorkPermit\": \"Employer sponsorship / work permit\",\n  \"description\": \"Build and maintain customer-facing web applications.\",\n  \"responsibilities\": [\n    \"Develop application features\",\n    \"Review code and resolve defects\"\n  ],\n  \"requiredSkills\": [\n    \"JavaScript\",\n    \"Node.js\",\n    \"PostgreSQL\"\n  ],\n  \"vacancyCount\": 2,\n  \"applicationEmail\": \"jobs@example.com\",\n  \"applicationUrl\": \"https://example.com/jobs/software-engineer\",\n  \"applicationDeadline\": \"2026-12-31T23:59:59.000Z\",\n  \"expiresAt\": \"2027-01-31T23:59:59.000Z\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/vendor/job-listings",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "vendor",
+                "job-listings"
+              ]
+            },
+            "description": "Requires an active vendor subscription with jobPortalAccess enabled. Creates a DRAFT and stores jobListingId."
+          }
+        },
+        {
+          "name": "List My Job Listings",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/vendor/job-listings?take=20&skip=0",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "vendor",
+                "job-listings"
+              ],
+              "query": [
+                {
+                  "key": "take",
+                  "value": "20"
+                },
+                {
+                  "key": "skip",
+                  "value": "0"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get My Job Listing",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/vendor/job-listings/{{jobListingId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "vendor",
+                "job-listings",
+                "{{jobListingId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Job Listing",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Senior Software Engineer\",\n  \"vacancyCount\": 3,\n  \"requiredSkills\": [\n    \"JavaScript\",\n    \"Node.js\",\n    \"PostgreSQL\",\n    \"AWS\"\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/vendor/job-listings/{{jobListingId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "vendor",
+                "job-listings",
+                "{{jobListingId}}"
+              ]
+            },
+            "description": "Only DRAFT or REJECTED jobs can be edited."
+          }
+        },
+        {
+          "name": "Submit Job Listing for Admin Review",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/vendor/job-listings/{{jobListingId}}/submit",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "vendor",
+                "job-listings",
+                "{{jobListingId}}",
+                "submit"
+              ]
+            },
+            "description": "Enforces active job portal access and maxJobPosts before moving the job to PENDING_REVIEW."
+          }
+        },
+        {
+          "name": "Delete Job Listing",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/vendor/job-listings/{{jobListingId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "vendor",
+                "job-listings",
+                "{{jobListingId}}"
+              ]
+            },
+            "description": "Only DRAFT or REJECTED jobs can be deleted."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin - Job Listing Review",
+      "auth": {
+        "type": "bearer",
+        "bearer": [
+          {
+            "key": "token",
+            "value": "{{adminAccessToken}}",
+            "type": "string"
+          }
+        ]
+      },
+      "item": [
+        {
+          "name": "Create Admin Job Listing",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code < 300) {",
+                  "  const data = pm.response.json().data;",
+                  "  if (data && data.id) pm.environment.set('jobListingId', data.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"country\": \"Canada\",\n  \"cityRegion\": \"Toronto\",\n  \"title\": \"Registered Nurse\",\n  \"industry\": \"Healthcare\",\n  \"qualification\": \"B.Sc Nursing + licence\",\n  \"experience\": \"2-6 years\",\n  \"indicativeSalary\": \"CAD 70,000-95,000/year\",\n  \"employmentType\": \"Full-time\",\n  \"visaWorkPermit\": \"Employer sponsorship may be available\",\n  \"reviewStatus\": \"PENDING_REVIEW\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/job-listings",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "job-listings"
+              ]
+            },
+            "description": "vendorUserId is optional. Useful for manually entered or imported jobs."
+          }
+        },
+        {
+          "name": "List Pending Job Listings",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/job-listings?reviewStatus=PENDING_REVIEW&take=20&skip=0",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "job-listings"
+              ],
+              "query": [
+                {
+                  "key": "reviewStatus",
+                  "value": "PENDING_REVIEW"
+                },
+                {
+                  "key": "take",
+                  "value": "20"
+                },
+                {
+                  "key": "skip",
+                  "value": "0"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Job Listing for Review",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/job-listings/{{jobListingId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "job-listings",
+                "{{jobListingId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Job Listing as Admin",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"indicativeSalary\": \"CAD 75,000-100,000/year\",\n  \"vacancyCount\": 5\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/job-listings/{{jobListingId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "job-listings",
+                "{{jobListingId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Approve and Publish Job Listing",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/job-listings/{{jobListingId}}/approve",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "job-listings",
+                "{{jobListingId}}",
+                "approve"
+              ]
+            },
+            "description": "Only PENDING_REVIEW jobs can be approved. Vendor jobs are rechecked for a valid job-enabled subscription."
+          }
+        },
+        {
+          "name": "Reject Job Listing",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"Please provide a clearer salary range and application deadline.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/job-listings/{{jobListingId}}/reject",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "job-listings",
+                "{{jobListingId}}",
+                "reject"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete Job Listing as Admin",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/job-listings/{{jobListingId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "job-listings",
+                "{{jobListingId}}"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Public - Job Listings",
+      "item": [
+        {
+          "name": "List Published Job Listings",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/job-listings?country=UAE&take=20&skip=0",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "job-listings"
+              ],
+              "query": [
+                {
+                  "key": "country",
+                  "value": "UAE"
+                },
+                {
+                  "key": "cityRegion",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "industry",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "employmentType",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "search",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "take",
+                  "value": "20"
+                },
+                {
+                  "key": "skip",
+                  "value": "0"
+                }
+              ]
+            },
+            "description": "Returns only approved, published, visible, non-expired jobs."
+          }
+        },
+        {
+          "name": "Get Published Job Listing",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/job-listings/{{jobListingId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "job-listings",
+                "{{jobListingId}}"
+              ]
+            }
           }
         }
       ]

@@ -4,6 +4,7 @@ import adminRoutes from './admin.routes.js';
 import vendorsRoutes from './vendors.routes.js';
 import leadsRoutes from './leads.routes.js';
 import serviceListingsRoutes from './serviceListings.routes.js';
+import jobListingsRoutes from './jobListings.routes.js';
 
 const router = Router();
 
@@ -14,5 +15,6 @@ router.use('/', adminRoutes);
 router.use('/vendors', vendorsRoutes);
 router.use('/leads', leadsRoutes);
 router.use('/service-listings', serviceListingsRoutes);
+router.use('/job-listings', jobListingsRoutes);
 
 export default router;

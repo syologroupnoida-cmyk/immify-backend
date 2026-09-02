@@ -16,6 +16,7 @@ model VendorProfile {
   creditTransactions VendorCreditTransaction[]
   subscriptions      VendorSubscription[]
   serviceListings    VendorServiceListing[]
+  jobListings        JobListing[]
 
   @@index([kycStatus])
   @@index([vendorType])

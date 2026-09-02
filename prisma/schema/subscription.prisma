@@ -77,6 +77,7 @@ model VendorSubscription {
   categories        VendorSubscriptionCategory[]
   payments          SubscriptionPayment[]
   creditTransaction VendorCreditTransaction?
+  jobListings       JobListing[]
 
   @@index([vendorUserId, status, expiresAt])
   @@index([planId, status])

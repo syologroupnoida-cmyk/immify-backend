@@ -121,6 +121,12 @@ New global leads are always created as `PENDING`; public callers cannot set stat
 | GET | `/vendor/service-listings` | Vendor listing dashboard |
 | PATCH | `/vendor/service-listings/:listingId` | Update a draft/rejected listing |
 | POST | `/vendor/service-listings/:listingId/submit` | Submit a draft/rejected listing for admin review |
+| POST | `/vendor/job-listings` | Create a job draft; requires an active subscription with job portal access |
+| GET | `/vendor/job-listings` | Vendor-owned job dashboard; query `reviewStatus?, take?, skip?` |
+| GET | `/vendor/job-listings/:jobId` | Vendor-owned job detail |
+| PATCH | `/vendor/job-listings/:jobId` | Update a draft/rejected job |
+| DELETE | `/vendor/job-listings/:jobId` | Delete a draft/rejected job |
+| POST | `/vendor/job-listings/:jobId/submit` | Submit for review; enforces `maxJobPosts` |
 
 Service listing fields: `categoryId`, `serviceId?`, `title?`, `description?`, `includes?`,
 `chargesIncludeGst?`, `imageUrl?`, `overview?`, `process?`, `priceInPaise?`, `currency?`, `pricingDetails?`,
@@ -133,6 +139,22 @@ Service listing fields: `categoryId`, `serviceId?`, `title?`, `description?`, `i
 | GET | `/admin/service-listings?status=PENDING_REVIEW` | Paginated review queue; also filters by vendor/category |
 | POST | `/admin/service-listings/:listingId/approve` | Approve and publish after rechecking subscription/category/plan limit |
 | POST | `/admin/service-listings/:listingId/reject` | Reject with `{ reason }` so the vendor can edit and resubmit |
+
+### Job listings
+
+| Method | Path | Purpose |
+|---|---|---|
+| GET | `/job-listings` | Public approved, visible, non-expired jobs; supports search and location/industry/type filters |
+| GET | `/job-listings/:jobId` | Public approved job detail |
+| POST | `/admin/job-listings` | Admin creates/imports a job; `vendorUserId` is optional |
+| GET | `/admin/job-listings` | Admin job queue and filters |
+| GET | `/admin/job-listings/:jobId` | Admin job detail |
+| PATCH | `/admin/job-listings/:jobId` | Admin corrects job data |
+| DELETE | `/admin/job-listings/:jobId` | Admin deletes a job |
+| POST | `/admin/job-listings/:jobId/approve` | Approve and publish a pending job |
+| POST | `/admin/job-listings/:jobId/reject` | Reject a pending job with `{ reason }` |
+
+Use `docs/import-job-openings-pgadmin.sql` to import the 100-job CSV through a temporary staging table. Imported records use `vendorUserId = NULL` and enter `PENDING_REVIEW`.
 
 ---
 

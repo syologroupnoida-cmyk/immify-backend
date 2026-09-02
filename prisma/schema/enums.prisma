@@ -126,3 +126,10 @@ enum ServiceListingReviewStatus {
   APPROVED
   REJECTED
 }
+
+enum JobListingReviewStatus {
+  DRAFT
+  PENDING_REVIEW
+  APPROVED
+  REJECTED
+}

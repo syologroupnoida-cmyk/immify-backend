@@ -135,8 +135,12 @@ export const getMySubscription = async ({ vendorUserId, id }) => {
 export const getMyEntitlements = async (vendorUserId) => {
   const subscription = await repo.getSubscriptionEntitlements(vendorUserId);
   if (!subscription) return { hasActiveSubscription: false, subscription: null, usage: null, categories: [] };
-  const publishedPackages = await repo.countPublishedListings(vendorUserId);
+  const [publishedPackages, submittedJobPosts] = await Promise.all([
+    repo.countPublishedListings(vendorUserId),
+    repo.countSubscriptionJobPosts(subscription.id),
+  ]);
   const limit = subscription.maxPackagesSnapshot;
+  const jobLimit = subscription.maxJobPostsSnapshot;
   return {
     hasActiveSubscription: true,
     subscription: {
@@ -147,12 +151,18 @@ export const getMyEntitlements = async (vendorUserId) => {
       expiresAt: subscription.expiresAt,
       includedCredits: subscription.includedCreditsSnapshot,
       directLeadPriceCredits: subscription.directLeadPriceCreditsSnapshot,
+      jobPortalAccess: subscription.jobPortalAccessSnapshot,
+      maxJobPosts: jobLimit,
       rules: subscription.plan.rules,
     },
     usage: {
       publishedPackages,
       maxPackages: limit,
       remainingPackages: limit === null ? null : Math.max(0, limit - publishedPackages),
+      submittedJobPosts,
+      remainingJobPosts: !subscription.jobPortalAccessSnapshot
+        ? 0
+        : jobLimit === null ? null : Math.max(0, jobLimit - submittedJobPosts),
     },
     categories: subscription.categories.map(({ category }) => category),
   };

@@ -137,6 +137,9 @@ export const getSubscriptionEntitlements = (vendorUserId) => prisma.vendorSubscr
 
 export const findCatalogService = (serviceId, categoryId) => prisma.service.findFirst({ where: { id: serviceId, categoryId, isActive: true }, select: { id: true } });
 export const countPublishedListings = (vendorUserId) => prisma.vendorServiceListing.count({ where: { vendorUserId, reviewStatus: 'APPROVED', isPublished: true } });
+export const countSubscriptionJobPosts = (subscriptionId) => prisma.jobListing.count({
+  where: { subscriptionId, reviewStatus: { in: ['PENDING_REVIEW', 'APPROVED'] } },
+});
 export const createListing = (data) => prisma.vendorServiceListing.create({ data, include: { category: true, service: true } });
 export const listVendorListings = (vendorUserId) => prisma.vendorServiceListing.findMany({ where: { vendorUserId }, include: { category: true, service: true }, orderBy: { createdAt: 'desc' } });
 export const findVendorListing = (id, vendorUserId) => prisma.vendorServiceListing.findFirst({ where: { id, vendorUserId }, include: { category: true, service: true } });

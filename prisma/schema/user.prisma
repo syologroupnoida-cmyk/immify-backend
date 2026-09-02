@@ -22,6 +22,7 @@ model User {
   customerProfile CustomerProfile?
   createdLeads    Lead[]           @relation("LeadClient")
   reviewedLeads   Lead[]           @relation("LeadReviewer")
+  reviewedJobListings JobListing[] @relation("JobListingReviewer")
 
   @@index([role])
   @@map("users")

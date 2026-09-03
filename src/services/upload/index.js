@@ -1,5 +1,6 @@
 import { uploadBuffer } from '../../utils/cloudinary.js';
 import { ApiError } from '../../utils/ApiError.js';
+import { randomUUID } from 'node:crypto';
 
 const sanitizeName = (name) =>
   (name || 'file').replace(/\.[^.]+$/, '').replace(/[^a-zA-Z0-9-_]/g, '_').slice(0, 80);
@@ -28,7 +29,7 @@ export const uploadImage = async ({ buffer, mimetype, originalname, purpose, use
   const hasCustomName = Boolean(name);
   const publicId = hasCustomName
     ? sanitizeName(name)
-    : `${Date.now()}-${sanitizeName(originalname)}`;
+    : `${randomUUID()}-${sanitizeName(originalname)}`;
 
   try {
     const result = await uploadBuffer({

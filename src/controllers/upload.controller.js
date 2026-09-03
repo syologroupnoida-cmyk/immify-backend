@@ -15,8 +15,10 @@ export const uploadImage = asyncHandler(async (req, res) => {
     mimetype: req.file.mimetype,
     originalname: req.file.originalname,
     purpose: req.body.purpose,
-    name: req.body.name, // optional — stored as Cloudinary publicId for easy lookup
-    userId: req.user.id,
+    // Anonymous callers cannot choose an overwrite slot. This prevents one
+    // public user from replacing another public user's file by reusing a name.
+    name: req.user ? req.body.name : undefined,
+    userId: req.user?.id ?? 'anonymous',
   });
 
   return sendSuccess(res, {

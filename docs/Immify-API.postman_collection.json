@@ -621,7 +621,51 @@
                 "file"
               ]
             },
-            "description": "Select a PDF, JPEG, PNG, or WebP in the file field. PDFs are stored in Cloudinary as raw resources. Copy data.url from the response into resumeUrl, passportDocumentUrl, ieltsDocumentUrl, educationalCertificateUrls, experienceLetterUrls, or bankStatementUrl when creating the lead."
+            "description": "Select a PDF, JPEG, PNG, or WebP in the file field. PDFs are stored in Cloudinary as raw resources. Copy data.url from the response into resumeUrl, passportDocumentUrl, ieltsDocumentUrl, educationalCertificateUrls, experienceLetterUrls, or bankStatementUrl when creating the lead.",
+            "auth": {
+              "type": "noauth"
+            }
+          }
+        },
+        {
+          "name": "Upload Service Listing Image",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": []
+                },
+                {
+                  "key": "purpose",
+                  "value": "service-listing",
+                  "type": "text"
+                },
+                {
+                  "key": "name",
+                  "value": "service-cover",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/uploads/image",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "uploads",
+                "image"
+              ]
+            },
+            "description": "Select a JPEG, PNG, or WebP in the file field. Uses the vendor token and purpose=service-listing. Copy data.url from the response into imageUrl when creating or updating a service listing. The optional name creates a stable Cloudinary slot and re-uploading it replaces the previous image."
           }
         }
       ]

@@ -51,8 +51,10 @@ Notes:
 
 | Method | Path | Auth | Body |
 |---|---|---|---|
-| POST | `/uploads/file` | Bearer | `multipart/form-data`: `file` (JPEG, PNG, WebP, or PDF), `purpose` (see below), `name?` |
-| POST | `/uploads/image` | Bearer | Backwards-compatible alias of `/uploads/file` |
+| POST | `/uploads/file` | Public; optional Bearer | `multipart/form-data`: `file` (JPEG, PNG, WebP, or PDF), `purpose` (see below), `name?` |
+| POST | `/uploads/image` | Public; optional Bearer | Backwards-compatible alias of `/uploads/file` |
+
+Anonymous uploads are limited to 20 requests per IP per hour and always receive a unique Cloudinary public ID. The optional `name` overwrite slot is honored only for authenticated users.
 
 `purpose` enum: `kyc-pan`, `kyc-aadhaar`, `kyc-gst`, `kyc-cin`, `company-logo`, `avatar`, `favicon_icon`, `header_logo`, `lead-document`, `other`. PDFs are uploaded to Cloudinary as `raw` resources; images use the `image` resource type.
 

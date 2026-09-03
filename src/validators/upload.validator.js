@@ -10,6 +10,7 @@ export const UPLOAD_PURPOSES = [
   'favicon_icon',
   'header_logo',
   'lead-document',
+  'service-listing',
   'other',
 ];
 

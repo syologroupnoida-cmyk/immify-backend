@@ -10,3 +10,6 @@ npm-debug.log*
 Thumbs.db
 docs/import-job-openings-pgadmin.sql
 docs/International_100_Job_Openings_Database_2026 - 100_Jobs Data.csv
+docs/IMMIFY_Global_Immigration_Friendly_Countries_10_Programs_Each.xlsx
+docs/immigration-programs-import.csv
+docs/import-immigration-programs-pgadmin.sql

@@ -1,0 +1,31 @@
+model ImmigrationProgram {
+  id                  String   @id
+  country             String
+  programNo           Int
+  category            String
+  programName         String
+  description         String
+  bestFor             String
+  eligibilityThemes   String
+  typicalDocuments    String
+  candidateJourney    String
+  familyOption        String
+  prLongTermPotential String
+  vendorBasicInr      Int
+  vendorStandardInr   Int
+  vendorPremiumInr    Int
+  pricingNotes        String
+  leadPriority        String
+  officialPortalUrl   String
+  verificationStatus  String
+  isActive            Boolean  @default(true)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  @@unique([country, programNo])
+  @@index([country, programNo])
+  @@index([category])
+  @@index([leadPriority])
+  @@index([isActive, country])
+  @@map("immigration_programs")
+}

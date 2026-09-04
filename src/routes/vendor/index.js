@@ -7,6 +7,7 @@ import creditsRoutes from './credits.routes.js';
 import subscriptionsRoutes from './subscriptions.routes.js';
 import serviceListingsRoutes from './serviceListings.routes.js';
 import jobListingsRoutes from './jobListings.routes.js';
+import jobApplicationsRoutes from './jobApplications.routes.js';
 
 const router = Router();
 
@@ -20,5 +21,6 @@ router.use('/credits', creditsRoutes);
 router.use('/subscriptions', subscriptionsRoutes);
 router.use('/service-listings', serviceListingsRoutes);
 router.use('/job-listings', jobListingsRoutes);
+router.use('/job-applications', jobApplicationsRoutes);
 
 export default router;

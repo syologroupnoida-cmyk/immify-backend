@@ -56,7 +56,7 @@ Notes:
 
 Anonymous uploads are limited to 20 requests per IP per hour and always receive a unique Cloudinary public ID. The optional `name` overwrite slot is honored only for authenticated users.
 
-`purpose` enum: `kyc-pan`, `kyc-aadhaar`, `kyc-gst`, `kyc-cin`, `company-logo`, `avatar`, `favicon_icon`, `header_logo`, `lead-document`, `other`. PDFs are uploaded to Cloudinary as `raw` resources; images use the `image` resource type.
+`purpose` enum: `kyc-pan`, `kyc-aadhaar`, `kyc-gst`, `kyc-cin`, `company-logo`, `avatar`, `favicon_icon`, `header_logo`, `lead-document`, `job-resume`, `service-listing`, `other`. PDFs are uploaded to Cloudinary as `raw` resources; images use the `image` resource type.
 
 ---
 
@@ -91,6 +91,16 @@ New global leads are always created as `PENDING`; public callers cannot set stat
 |---|---|---|---|
 | GET | `/service-categories` | Public | Lists active categories only (without nested services) |
 | GET | `/service-categories/:categoryId` | Public | Lists active services for the category; returns an empty array when none exist |
+
+## Public Immigration Programs — `/immigration-programs`
+
+| Method | Path | Auth | Notes |
+|---|---|---|---|
+| GET | `/immigration-programs` | Public | Paginated active programs; query `country?`, `category?`, `leadPriority=High|Medium`, `search?`, `take?`, `skip?` |
+| GET | `/immigration-programs/filter-options` | Public | Distinct countries, categories, and lead priorities for frontend filters |
+| GET | `/immigration-programs/:programId` | Public | Complete program detail, eligibility, documents, journey, pricing, official portal, and verification warning |
+
+Import the supplied workbook data through pgAdmin using `docs/immigration-programs-import.csv` and `docs/import-immigration-programs-pgadmin.sql`. The import is idempotent and should report 290 records.
 
 ---
 
@@ -129,6 +139,9 @@ New global leads are always created as `PENDING`; public callers cannot set stat
 | PATCH | `/vendor/job-listings/:jobId` | Update a draft/rejected job |
 | DELETE | `/vendor/job-listings/:jobId` | Delete a draft/rejected job |
 | POST | `/vendor/job-listings/:jobId/submit` | Submit for review; enforces `maxJobPosts` |
+| GET | `/vendor/job-applications` | Applications assigned from this vendor's jobs; query `jobListingId?, status?, take?, skip?` |
+| GET | `/vendor/job-applications/:applicationId` | Assigned application detail including resume URL |
+| PATCH | `/vendor/job-applications/:applicationId/status` | `{ status, note? }`; status is `REVIEWING`, `SHORTLISTED`, `REJECTED`, or `HIRED` |
 
 Service listing fields: `categoryId`, `serviceId?`, `title?`, `description?`, `includes?`,
 `chargesIncludeGst?`, `imageUrl?`, `overview?`, `process?`, `priceInPaise?`, `currency?`, `pricingDetails?`,
@@ -148,7 +161,11 @@ Service listing fields: `categoryId`, `serviceId?`, `title?`, `description?`, `i
 |---|---|---|
 | GET | `/job-listings` | Public approved, visible, non-expired jobs; supports search and location/industry/type filters |
 | GET | `/job-listings/:jobId` | Public approved job detail |
+| POST | `/job-listings/:jobId/applications` | Public JSON: required `firstName`, `lastName`, `email`, `phone`, `resumeUrl`, `consent: true`; optional `currentLocation`, `yearsExperience`, `noticePeriod`, `coverLetter`, `linkedinUrl`, `portfolioUrl`. Upload the PDF through `/uploads/file` first and send its returned URL here. |
 | POST | `/admin/job-listings` | Admin creates/imports a job; `vendorUserId` is optional |
+| GET | `/admin/job-applications` | Every application; query `assignment=ALL|ASSIGNED|UNASSIGNED`, `jobListingId?`, `assignedVendorUserId?`, `status?`, `search?`, `take?`, `skip?` |
+| GET | `/admin/job-applications/:applicationId` | Application detail including resume and assignment |
+| PATCH | `/admin/job-applications/:applicationId/status` | `{ status, note? }` |
 | GET | `/admin/job-listings` | Admin job queue and filters |
 | GET | `/admin/job-listings/:jobId` | Admin job detail |
 | PATCH | `/admin/job-listings/:jobId` | Admin corrects job data |

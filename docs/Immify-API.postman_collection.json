@@ -3220,6 +3220,274 @@
               ]
             }
           }
+        },
+        {
+          "name": "Upload Job Resume",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code < 300) {",
+                  "  const data = (pm.response.json().data || {});",
+                  "  if (data.url) pm.environment.set('resumeUrl', data.url);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "purpose", "value": "job-resume", "type": "text" },
+                { "key": "file", "type": "file", "src": [] }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/uploads/file",
+              "host": ["{{baseUrl}}"],
+              "path": ["uploads", "file"]
+            },
+            "description": "Select the applicant PDF. A successful response automatically saves data.url as resumeUrl."
+          }
+        },
+        {
+          "name": "Submit Job Application",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code < 300) {",
+                  "  const data = (pm.response.json().data || {});",
+                  "  if (data.id) pm.environment.set('jobApplicationId', data.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"Rahul\",\n  \"lastName\": \"Sharma\",\n  \"email\": \"rahul.applicant@example.com\",\n  \"phone\": \"+919876543210\",\n  \"currentLocation\": \"Delhi, India\",\n  \"yearsExperience\": \"4 years\",\n  \"noticePeriod\": \"30 days\",\n  \"coverLetter\": \"I am interested in this opportunity.\",\n  \"linkedinUrl\": \"https://www.linkedin.com/in/example\",\n  \"portfolioUrl\": \"https://example.com\",\n  \"resumeUrl\": \"{{resumeUrl}}\",\n  \"consent\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/job-listings/{{jobListingId}}/applications",
+              "host": ["{{baseUrl}}"],
+              "path": ["job-listings", "{{jobListingId}}", "applications"]
+            },
+            "description": "First upload the PDF with POST /uploads/file (purpose=job-resume), then place data.url in resumeUrl. The response saves jobApplicationId. A job with vendorUserId is assigned directly to that vendor; otherwise it remains unassigned for admin."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin - Job Applications",
+      "auth": {
+        "type": "bearer",
+        "bearer": [{ "key": "token", "value": "{{adminAccessToken}}", "type": "string" }]
+      },
+      "item": [
+        {
+          "name": "List All Job Applications",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/job-applications?assignment=ALL&take=20&skip=0",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "job-applications"],
+              "query": [
+                { "key": "assignment", "value": "ALL" },
+                { "key": "jobListingId", "value": "{{jobListingId}}", "disabled": true },
+                { "key": "assignedVendorUserId", "value": "{{vendorUserId}}", "disabled": true },
+                { "key": "status", "value": "SUBMITTED", "disabled": true },
+                { "key": "search", "value": "", "disabled": true },
+                { "key": "take", "value": "20" },
+                { "key": "skip", "value": "0" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "List Unassigned Job Applications",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/job-applications?assignment=UNASSIGNED&take=20&skip=0",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "job-applications"],
+              "query": [
+                { "key": "assignment", "value": "UNASSIGNED" },
+                { "key": "take", "value": "20" },
+                { "key": "skip", "value": "0" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Job Application as Admin",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/job-applications/{{jobApplicationId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "job-applications", "{{jobApplicationId}}"]
+            }
+          }
+        },
+        {
+          "name": "Update Job Application Status as Admin",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"SHORTLISTED\",\n  \"note\": \"Candidate selected for the first interview.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/job-applications/{{jobApplicationId}}/status",
+              "host": ["{{baseUrl}}"],
+              "path": ["admin", "job-applications", "{{jobApplicationId}}", "status"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Vendor - Job Applications",
+      "auth": {
+        "type": "bearer",
+        "bearer": [{ "key": "token", "value": "{{vendorAccessToken}}", "type": "string" }]
+      },
+      "item": [
+        {
+          "name": "List Assigned Job Applications",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/vendor/job-applications?take=20&skip=0",
+              "host": ["{{baseUrl}}"],
+              "path": ["vendor", "job-applications"],
+              "query": [
+                { "key": "jobListingId", "value": "{{jobListingId}}", "disabled": true },
+                { "key": "status", "value": "SUBMITTED", "disabled": true },
+                { "key": "take", "value": "20" },
+                { "key": "skip", "value": "0" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Assigned Job Application",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/vendor/job-applications/{{jobApplicationId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["vendor", "job-applications", "{{jobApplicationId}}"]
+            }
+          }
+        },
+        {
+          "name": "Update Assigned Job Application Status",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"REVIEWING\",\n  \"note\": \"Resume review started.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/vendor/job-applications/{{jobApplicationId}}/status",
+              "host": ["{{baseUrl}}"],
+              "path": ["vendor", "job-applications", "{{jobApplicationId}}", "status"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Public - Immigration Programs",
+      "item": [
+        {
+          "name": "List Immigration Programs",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code < 300) {",
+                  "  const items = ((pm.response.json().data || {}).items || []);",
+                  "  if (items.length) pm.environment.set('immigrationProgramId', items[0].id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/immigration-programs?country=Canada&take=20&skip=0",
+              "host": ["{{baseUrl}}"],
+              "path": ["immigration-programs"],
+              "query": [
+                { "key": "country", "value": "Canada" },
+                { "key": "category", "value": "", "disabled": true },
+                { "key": "leadPriority", "value": "High", "disabled": true },
+                { "key": "search", "value": "", "disabled": true },
+                { "key": "take", "value": "20" },
+                { "key": "skip", "value": "0" }
+              ]
+            },
+            "description": "Returns active immigration programs ordered by country and program number. Saves the first result ID."
+          }
+        },
+        {
+          "name": "Get Immigration Program Filter Options",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/immigration-programs/filter-options",
+              "host": ["{{baseUrl}}"],
+              "path": ["immigration-programs", "filter-options"]
+            }
+          }
+        },
+        {
+          "name": "Get Immigration Program Detail",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/immigration-programs/{{immigrationProgramId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["immigration-programs", "{{immigrationProgramId}}"]
+            }
+          }
         }
       ]
     }

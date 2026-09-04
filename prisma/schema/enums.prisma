@@ -133,3 +133,11 @@ enum JobListingReviewStatus {
   APPROVED
   REJECTED
 }
+
+enum JobApplicationStatus {
+  SUBMITTED
+  REVIEWING
+  SHORTLISTED
+  REJECTED
+  HIRED
+}

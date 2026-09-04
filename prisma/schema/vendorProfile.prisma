@@ -17,6 +17,7 @@ model VendorProfile {
   subscriptions      VendorSubscription[]
   serviceListings    VendorServiceListing[]
   jobListings        JobListing[]
+  jobApplications    JobApplication[]
 
   @@index([kycStatus])
   @@index([vendorType])

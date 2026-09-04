@@ -16,13 +16,13 @@ model User {
   createdAt       DateTime     @default(now())
   updatedAt       DateTime     @updatedAt
 
-  refreshTokens   RefreshToken[]
-  emailOtps       EmailOtp[]
-  vendorProfile   VendorProfile?
-  customerProfile CustomerProfile?
-  createdLeads    Lead[]           @relation("LeadClient")
-  reviewedLeads   Lead[]           @relation("LeadReviewer")
-  reviewedJobListings JobListing[] @relation("JobListingReviewer")
+  refreshTokens       RefreshToken[]
+  emailOtps           EmailOtp[]
+  vendorProfile       VendorProfile?
+  customerProfile     CustomerProfile?
+  createdLeads        Lead[]           @relation("LeadClient")
+  reviewedLeads       Lead[]           @relation("LeadReviewer")
+  reviewedJobListings JobListing[]     @relation("JobListingReviewer")
 
   @@index([role])
   @@map("users")

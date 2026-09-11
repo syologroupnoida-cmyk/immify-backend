@@ -129,7 +129,7 @@ Import the supplied workbook data through pgAdmin using `docs/immigration-progra
 | GET | `/vendor/subscriptions/entitlements` | Current active plan, allowed categories/services, package usage and remaining allowance |
 | GET | `/vendor/subscriptions` | Vendor subscription/payment history |
 | GET | `/vendor/subscriptions/:subscriptionId` | Vendor-owned subscription detail |
-| POST | `/vendor/service-listings` | Create a subscription-gated draft. Only `categoryId` is required; service details are optional. |
+| POST | `/vendor/service-listings?draft=true|false` | Create a subscription-gated listing. Use `draft=true` (default) to save it as a draft or `draft=false` to submit it directly for admin review. Only `categoryId` is required; service details are optional. |
 | GET | `/vendor/service-listings` | Vendor listing dashboard |
 | PATCH | `/vendor/service-listings/:listingId` | Update a draft/rejected listing |
 | POST | `/vendor/service-listings/:listingId/submit` | Submit a draft/rejected listing for admin review |

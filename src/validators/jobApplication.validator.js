@@ -12,8 +12,12 @@ export const createJobApplicationSchema = z.object({
   yearsExperience: optionalText(100),
   noticePeriod: optionalText(100),
   coverLetter: optionalText(5000),
-  linkedinUrl: z.string().trim().url().max(2000).optional().or(z.literal('').transform(() => undefined)),
-  portfolioUrl: z.string().trim().url().max(2000).optional().or(z.literal('').transform(() => undefined)),
+  linkedinUrl: z.string().trim().url().max(2000).optional()
+    .or(z.literal('#'))
+    .or(z.literal('').transform(() => undefined)),
+  portfolioUrl: z.string().trim().url().max(2000).optional()
+    .or(z.literal('#'))
+    .or(z.literal('').transform(() => undefined)),
   resumeUrl: z.string().trim().url().max(2000),
   consent: z.literal(true, { errorMap: () => ({ message: 'consent must be true' }) }),
 }).strict();

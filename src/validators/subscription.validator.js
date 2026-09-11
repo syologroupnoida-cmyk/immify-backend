@@ -82,6 +82,10 @@ export const createServiceListingSchema = z.object({
   dynamicData: z.record(z.unknown()).optional(),
 }).strict();
 
+export const createServiceListingQuerySchema = z.object({
+  draft: z.enum(['true', 'false']).default('true').transform((value) => value === 'true'),
+}).strict();
+
 export const updateServiceListingSchema = z.object({
   serviceId: id.nullable().optional(),
   title: z.string().trim().max(160).nullable().optional(),

@@ -199,12 +199,17 @@ const requireEntitlement = async ({ vendorUserId, categoryId, requireSlot = fals
   return subscription;
 };
 
-export const createListing = async ({ vendorUserId, payload }) => {
+export const createListing = async ({ vendorUserId, payload, draft = true }) => {
   await requireEntitlement({ vendorUserId, categoryId: payload.categoryId });
   if (payload.serviceId && !(await repo.findCatalogService(payload.serviceId, payload.categoryId))) {
     throw ApiError.badRequest('The selected service does not belong to the selected active category.');
   }
-  return repo.createListing({ ...payload, vendorUserId });
+  return repo.createListing({
+    ...payload,
+    vendorUserId,
+    reviewStatus: draft ? 'DRAFT' : 'PENDING_REVIEW',
+    ...(!draft && { submittedAt: new Date() }),
+  });
 };
 export const listMyListings = (vendorUserId) => repo.listVendorListings(vendorUserId);
 export const updateListing = async ({ vendorUserId, id, payload }) => {

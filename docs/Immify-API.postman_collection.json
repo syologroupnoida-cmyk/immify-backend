@@ -2700,14 +2700,22 @@
               "mode": "raw",
               "raw": "{\n  \"categoryId\": \"{{serviceCategoryId}}\",\n  \"serviceId\": \"{{serviceId}}\",\n  \"title\": \"Canada Express Entry\",\n  \"description\": \"Complete immigration assistance\",\n  \"includes\": [\n    \"Profile assessment\",\n    \"Documentation support\",\n    \"Application submission\"\n  ],\n  \"priceInPaise\": 2500000,\n  \"currency\": \"INR\",\n  \"chargesIncludeGst\": true,\n  \"imageUrl\": \"https://example.com/service.jpg\",\n  \"overview\": \"Complete details about the service\",\n  \"process\": \"Assessment, documentation, submission and follow-up\",\n  \"pricingDetails\": \"Starting price; additional government fees may apply\",\n  \"termsAndConditions\": \"Cancellation and refund policy\",\n  \"dynamicData\": {\n    \"country\": \"Canada\"\n  }\n}"
             },
+            "description": "Set the draft query parameter to true (or omit it) to save as DRAFT. Set it to false to create the service directly as PENDING_REVIEW for admin review. The separate /:listingId/submit route is for submitting a draft that was saved earlier.",
             "url": {
-              "raw": "{{baseUrl}}/vendor/service-listings",
+              "raw": "{{baseUrl}}/vendor/service-listings?draft=true",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "vendor",
                 "service-listings"
+              ],
+              "query": [
+                {
+                  "key": "draft",
+                  "value": "true",
+                  "description": "Use false to submit directly for admin review."
+                }
               ]
             }
           }

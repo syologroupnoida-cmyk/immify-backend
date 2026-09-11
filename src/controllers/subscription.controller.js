@@ -148,10 +148,13 @@ export const rejectPayment = asyncHandler(async (req, res) =>
 export const createListing = asyncHandler(async (req, res) =>
   ok(
     res,
-    "Service listing created.",
+    req.query.draft
+      ? "Service listing created as a draft."
+      : "Service listing created and submitted for admin review.",
     await service.createListing({
       vendorUserId: req.user.id,
       payload: req.body,
+      draft: req.query.draft,
     }),
     201,
   ),

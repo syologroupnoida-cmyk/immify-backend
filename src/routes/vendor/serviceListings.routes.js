@@ -5,6 +5,7 @@ import * as controller from '../../controllers/subscription.controller.js';
 const router = Router();
 router.post('/', validateRequest(createServiceListingQuerySchema, 'query'), validateRequest(createServiceListingSchema), controller.createListing);
 router.get('/', controller.listMyListings);
+router.get('/:listingId', controller.getMyListing);
 router.patch('/:listingId', validateRequest(updateServiceListingSchema), controller.updateListing);
 router.post('/:listingId/submit', controller.submitListingForReview);
 export default router;

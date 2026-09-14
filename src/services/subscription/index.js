@@ -212,6 +212,11 @@ export const createListing = async ({ vendorUserId, payload, draft = true }) => 
   });
 };
 export const listMyListings = (vendorUserId) => repo.listVendorListings(vendorUserId);
+export const getMyListing = async ({ vendorUserId, id }) => {
+  const listing = await repo.findVendorListing(id, vendorUserId);
+  if (!listing) throw ApiError.notFound('Service listing not found.');
+  return listing;
+};
 export const updateListing = async ({ vendorUserId, id, payload }) => {
   const listing = await repo.findVendorListing(id, vendorUserId);
   if (!listing) throw ApiError.notFound('Service listing not found.');

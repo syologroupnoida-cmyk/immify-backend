@@ -2738,6 +2738,25 @@
           }
         },
         {
+          "name": "Get My Service Listing by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/vendor/service-listings/{{serviceListingId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "vendor",
+                "service-listings",
+                "{{serviceListingId}}"
+              ]
+            },
+            "description": "Returns a service listing owned by the authenticated vendor. Returns 404 when the listing does not exist or belongs to another vendor."
+          }
+        },
+        {
           "name": "Update Service Listing",
           "request": {
             "method": "PATCH",
@@ -2749,7 +2768,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"title\": \"Premium Express Entry Consultation\",\n  \"priceInPaise\": 3000000,\n  \"currency\": \"INR\",\n  \"pricingDetails\": \"Updated starting price\"\n}"
+              "raw": "{\n  \"serviceId\": \"{{serviceId}}\",\n  \"title\": \"Premium Express Entry Consultation\",\n  \"description\": \"Complete premium immigration assistance\",\n  \"includes\": [\n    \"Profile assessment\",\n    \"Documentation support\",\n    \"Application submission\"\n  ],\n  \"chargesIncludeGst\": true,\n  \"imageUrl\": \"https://example.com/service.jpg\",\n  \"overview\": \"Complete details about the updated service\",\n  \"process\": \"Assessment, documentation, submission and follow-up\",\n  \"priceInPaise\": 3000000,\n  \"currency\": \"INR\",\n  \"pricingDetails\": \"Updated starting price; additional government fees may apply\",\n  \"termsAndConditions\": \"Updated cancellation and refund policy\",\n  \"dynamicData\": {\n    \"country\": \"Canada\"\n  }\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/vendor/service-listings/{{serviceListingId}}",
@@ -2761,7 +2780,8 @@
                 "service-listings",
                 "{{serviceListingId}}"
               ]
-            }
+            },
+            "description": "Full update example. Remove any field you do not want to update. Send null for a nullable field when you want to clear its stored value. categoryId cannot be changed through this endpoint."
           }
         },
         {

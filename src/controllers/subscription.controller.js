@@ -166,6 +166,16 @@ export const listMyListings = asyncHandler(async (req, res) =>
     await service.listMyListings(req.user.id),
   ),
 );
+export const getMyListing = asyncHandler(async (req, res) =>
+  ok(
+    res,
+    "Service listing retrieved.",
+    await service.getMyListing({
+      vendorUserId: req.user.id,
+      id: req.params.listingId,
+    }),
+  ),
+);
 export const updateListing = asyncHandler(async (req, res) =>
   ok(
     res,

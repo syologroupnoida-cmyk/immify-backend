@@ -1,0 +1,20 @@
+model Blog {
+  id        String   @id @default(uuid())
+  slug      String   @unique
+  title     String
+  excerpt   String   @db.Text
+  category  String
+  readTime  String
+  image     String
+  content   String[]
+  isActive  Boolean  @default(true)
+  deletedAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([category])
+  @@index([isActive, createdAt])
+  @@index([createdAt])
+  @@index([deletedAt])
+  @@map("blogs")
+}

@@ -3266,20 +3266,35 @@
             }
           ],
           "request": {
-            "auth": { "type": "noauth" },
+            "auth": {
+              "type": "noauth"
+            },
             "method": "POST",
             "header": [],
             "body": {
               "mode": "formdata",
               "formdata": [
-                { "key": "purpose", "value": "job-resume", "type": "text" },
-                { "key": "file", "type": "file", "src": [] }
+                {
+                  "key": "purpose",
+                  "value": "job-resume",
+                  "type": "text"
+                },
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": []
+                }
               ]
             },
             "url": {
               "raw": "{{baseUrl}}/uploads/file",
-              "host": ["{{baseUrl}}"],
-              "path": ["uploads", "file"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "uploads",
+                "file"
+              ]
             },
             "description": "Select the applicant PDF. A successful response automatically saves data.url as resumeUrl."
           }
@@ -3306,7 +3321,10 @@
             },
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -3314,8 +3332,14 @@
             },
             "url": {
               "raw": "{{baseUrl}}/job-listings/{{jobListingId}}/applications",
-              "host": ["{{baseUrl}}"],
-              "path": ["job-listings", "{{jobListingId}}", "applications"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "job-listings",
+                "{{jobListingId}}",
+                "applications"
+              ]
             },
             "description": "First upload the PDF with POST /uploads/file (purpose=job-resume), then place data.url in resumeUrl. The response saves jobApplicationId. A job with vendorUserId is assigned directly to that vendor; otherwise it remains unassigned for admin."
           }
@@ -3326,7 +3350,13 @@
       "name": "Admin - Job Applications",
       "auth": {
         "type": "bearer",
-        "bearer": [{ "key": "token", "value": "{{adminAccessToken}}", "type": "string" }]
+        "bearer": [
+          {
+            "key": "token",
+            "value": "{{adminAccessToken}}",
+            "type": "string"
+          }
+        ]
       },
       "item": [
         {
@@ -3336,16 +3366,46 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/admin/job-applications?assignment=ALL&take=20&skip=0",
-              "host": ["{{baseUrl}}"],
-              "path": ["admin", "job-applications"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "job-applications"
+              ],
               "query": [
-                { "key": "assignment", "value": "ALL" },
-                { "key": "jobListingId", "value": "{{jobListingId}}", "disabled": true },
-                { "key": "assignedVendorUserId", "value": "{{vendorUserId}}", "disabled": true },
-                { "key": "status", "value": "SUBMITTED", "disabled": true },
-                { "key": "search", "value": "", "disabled": true },
-                { "key": "take", "value": "20" },
-                { "key": "skip", "value": "0" }
+                {
+                  "key": "assignment",
+                  "value": "ALL"
+                },
+                {
+                  "key": "jobListingId",
+                  "value": "{{jobListingId}}",
+                  "disabled": true
+                },
+                {
+                  "key": "assignedVendorUserId",
+                  "value": "{{vendorUserId}}",
+                  "disabled": true
+                },
+                {
+                  "key": "status",
+                  "value": "SUBMITTED",
+                  "disabled": true
+                },
+                {
+                  "key": "search",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "take",
+                  "value": "20"
+                },
+                {
+                  "key": "skip",
+                  "value": "0"
+                }
               ]
             }
           }
@@ -3357,12 +3417,26 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/admin/job-applications?assignment=UNASSIGNED&take=20&skip=0",
-              "host": ["{{baseUrl}}"],
-              "path": ["admin", "job-applications"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "job-applications"
+              ],
               "query": [
-                { "key": "assignment", "value": "UNASSIGNED" },
-                { "key": "take", "value": "20" },
-                { "key": "skip", "value": "0" }
+                {
+                  "key": "assignment",
+                  "value": "UNASSIGNED"
+                },
+                {
+                  "key": "take",
+                  "value": "20"
+                },
+                {
+                  "key": "skip",
+                  "value": "0"
+                }
               ]
             }
           }
@@ -3374,8 +3448,14 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/admin/job-applications/{{jobApplicationId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["admin", "job-applications", "{{jobApplicationId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "job-applications",
+                "{{jobApplicationId}}"
+              ]
             }
           }
         },
@@ -3383,15 +3463,27 @@
           "name": "Update Job Application Status as Admin",
           "request": {
             "method": "PATCH",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"status\": \"SHORTLISTED\",\n  \"note\": \"Candidate selected for the first interview.\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/admin/job-applications/{{jobApplicationId}}/status",
-              "host": ["{{baseUrl}}"],
-              "path": ["admin", "job-applications", "{{jobApplicationId}}", "status"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "job-applications",
+                "{{jobApplicationId}}",
+                "status"
+              ]
             }
           }
         }
@@ -3401,7 +3493,13 @@
       "name": "Vendor - Job Applications",
       "auth": {
         "type": "bearer",
-        "bearer": [{ "key": "token", "value": "{{vendorAccessToken}}", "type": "string" }]
+        "bearer": [
+          {
+            "key": "token",
+            "value": "{{vendorAccessToken}}",
+            "type": "string"
+          }
+        ]
       },
       "item": [
         {
@@ -3411,13 +3509,32 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/vendor/job-applications?take=20&skip=0",
-              "host": ["{{baseUrl}}"],
-              "path": ["vendor", "job-applications"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "vendor",
+                "job-applications"
+              ],
               "query": [
-                { "key": "jobListingId", "value": "{{jobListingId}}", "disabled": true },
-                { "key": "status", "value": "SUBMITTED", "disabled": true },
-                { "key": "take", "value": "20" },
-                { "key": "skip", "value": "0" }
+                {
+                  "key": "jobListingId",
+                  "value": "{{jobListingId}}",
+                  "disabled": true
+                },
+                {
+                  "key": "status",
+                  "value": "SUBMITTED",
+                  "disabled": true
+                },
+                {
+                  "key": "take",
+                  "value": "20"
+                },
+                {
+                  "key": "skip",
+                  "value": "0"
+                }
               ]
             }
           }
@@ -3429,8 +3546,14 @@
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/vendor/job-applications/{{jobApplicationId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["vendor", "job-applications", "{{jobApplicationId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "vendor",
+                "job-applications",
+                "{{jobApplicationId}}"
+              ]
             }
           }
         },
@@ -3438,15 +3561,27 @@
           "name": "Update Assigned Job Application Status",
           "request": {
             "method": "PATCH",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"status\": \"REVIEWING\",\n  \"note\": \"Resume review started.\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/vendor/job-applications/{{jobApplicationId}}/status",
-              "host": ["{{baseUrl}}"],
-              "path": ["vendor", "job-applications", "{{jobApplicationId}}", "status"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "vendor",
+                "job-applications",
+                "{{jobApplicationId}}",
+                "status"
+              ]
             }
           }
         }
@@ -3472,20 +3607,47 @@
             }
           ],
           "request": {
-            "auth": { "type": "noauth" },
+            "auth": {
+              "type": "noauth"
+            },
             "method": "GET",
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/immigration-programs?country=Canada&take=20&skip=0",
-              "host": ["{{baseUrl}}"],
-              "path": ["immigration-programs"],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "immigration-programs"
+              ],
               "query": [
-                { "key": "country", "value": "Canada" },
-                { "key": "category", "value": "", "disabled": true },
-                { "key": "leadPriority", "value": "High", "disabled": true },
-                { "key": "search", "value": "", "disabled": true },
-                { "key": "take", "value": "20" },
-                { "key": "skip", "value": "0" }
+                {
+                  "key": "country",
+                  "value": "Canada"
+                },
+                {
+                  "key": "category",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "leadPriority",
+                  "value": "High",
+                  "disabled": true
+                },
+                {
+                  "key": "search",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "take",
+                  "value": "20"
+                },
+                {
+                  "key": "skip",
+                  "value": "0"
+                }
               ]
             },
             "description": "Returns active immigration programs ordered by country and program number. Saves the first result ID."
@@ -3494,27 +3656,454 @@
         {
           "name": "Get Immigration Program Filter Options",
           "request": {
-            "auth": { "type": "noauth" },
+            "auth": {
+              "type": "noauth"
+            },
             "method": "GET",
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/immigration-programs/filter-options",
-              "host": ["{{baseUrl}}"],
-              "path": ["immigration-programs", "filter-options"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "immigration-programs",
+                "filter-options"
+              ]
             }
           }
         },
         {
           "name": "Get Immigration Program Detail",
           "request": {
-            "auth": { "type": "noauth" },
+            "auth": {
+              "type": "noauth"
+            },
             "method": "GET",
             "header": [],
             "url": {
               "raw": "{{baseUrl}}/immigration-programs/{{immigrationProgramId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["immigration-programs", "{{immigrationProgramId}}"]
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "immigration-programs",
+                "{{immigrationProgramId}}"
+              ]
             }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin - Blogs",
+      "auth": {
+        "type": "bearer",
+        "bearer": [
+          {
+            "key": "token",
+            "value": "{{adminAccessToken}}",
+            "type": "string"
+          }
+        ]
+      },
+      "item": [
+        {
+          "name": "Create Blog",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code < 300) {",
+                  "  const data = pm.response.json().data;",
+                  "  if (data && data.id) pm.environment.set('blogId', data.id);",
+                  "  if (data && data.slug) pm.environment.set('blogSlug', data.slug);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"slug\": \"canada-immigration-guide\",\n  \"title\": \"Canada Immigration Guide\",\n  \"excerpt\": \"An overview of immigration pathways to Canada.\",\n  \"category\": \"Immigration\",\n  \"readTime\": \"5 min read\",\n  \"image\": \"https://example.com/canada-guide.jpg\",\n  \"content\": [\"Explore available immigration pathways.\", \"Check eligibility and prepare your documents.\"],\n  \"isActive\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/blogs",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "blogs"
+              ]
+            },
+            "description": "Requires ADMIN or SUPER_ADMIN. Saves blogId and blogSlug."
+          }
+        },
+        {
+          "name": "List Blogs",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/blogs?take=20&skip=0",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "blogs"
+              ],
+              "query": [
+                {
+                  "key": "take",
+                  "value": "20"
+                },
+                {
+                  "key": "skip",
+                  "value": "0"
+                }
+              ]
+            },
+            "description": "Includes active and inactive blogs. Optional category and isActive query filters."
+          }
+        },
+        {
+          "name": "Get Blog",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/blogs/{{blogId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "blogs",
+                "{{blogId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Update Blog",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Canada Immigration Guide (Updated)\",\n  \"isActive\": false\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/blogs/{{blogId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "blogs",
+                "{{blogId}}"
+              ]
+            },
+            "description": "Set isActive to false to hide the blog from public routes."
+          }
+        },
+        {
+          "name": "Delete Blog",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/blogs/{{blogId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "blogs",
+                "{{blogId}}"
+              ]
+            },
+            "description": "Soft deletes the blog."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Public - Blogs",
+      "item": [
+        {
+          "name": "List Active Blogs",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/blogs?take=20&skip=0",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "blogs"
+              ],
+              "query": [
+                {
+                  "key": "take",
+                  "value": "20"
+                },
+                {
+                  "key": "skip",
+                  "value": "0"
+                }
+              ]
+            },
+            "description": "Returns active, non-deleted blogs. Optional category query filter."
+          }
+        },
+        {
+          "name": "Get Active Blog by Slug",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/blogs/{{blogSlug}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "blogs",
+                "{{blogSlug}}"
+              ]
+            },
+            "description": "Returns 404 for inactive or deleted blogs."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin - Blogs",
+      "auth": {
+        "type": "bearer",
+        "bearer": [
+          {
+            "key": "token",
+            "value": "{{adminAccessToken}}",
+            "type": "string"
+          }
+        ]
+      },
+      "item": [
+        {
+          "name": "Create Blog",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"slug\": \"canada-immigration-guide\",\n  \"title\": \"Canada Immigration Guide\",\n  \"excerpt\": \"A quick overview of immigration pathways to Canada.\",\n  \"category\": \"Immigration\",\n  \"readTime\": \"5 min read\",\n  \"image\": \"https://example.com/images/canada-guide.jpg\",\n  \"content\": [\n    \"Explore available immigration pathways.\",\n    \"Check eligibility and prepare your documents.\"\n  ],\n  \"isActive\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/blogs",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "blogs"
+              ]
+            },
+            "description": "Creates an active blog by default. Requires ADMIN or SUPER_ADMIN."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code < 300) {",
+                  "  const data = pm.response.json().data;",
+                  "  if (data && data.id) pm.environment.set('blogId', data.id);",
+                  "  if (data && data.slug) pm.environment.set('blogSlug', data.slug);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List Blogs",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/blogs?take=20&skip=0",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "blogs"
+              ],
+              "query": [
+                {
+                  "key": "take",
+                  "value": "20"
+                },
+                {
+                  "key": "skip",
+                  "value": "0"
+                }
+              ]
+            },
+            "description": "Includes active and inactive blogs. Optional category and isActive filters; take and skip pagination."
+          }
+        },
+        {
+          "name": "Get Blog",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/blogs/{{blogId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "blogs",
+                "{{blogId}}"
+              ]
+            },
+            "description": "Gets an active or inactive blog by ID."
+          }
+        },
+        {
+          "name": "Update Blog",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Canada Immigration Guide (Updated)\",\n  \"isActive\": false\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/blogs/{{blogId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "blogs",
+                "{{blogId}}"
+              ]
+            },
+            "description": "Updates supplied fields. Set isActive to false to hide the blog from public routes."
+          }
+        },
+        {
+          "name": "Delete Blog",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/blogs/{{blogId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "blogs",
+                "{{blogId}}"
+              ]
+            },
+            "description": "Soft deletes the blog; subsequent reads return 404."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Public - Blogs",
+      "item": [
+        {
+          "name": "List Active Blogs",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/blogs?take=20&skip=0",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "blogs"
+              ],
+              "query": [
+                {
+                  "key": "take",
+                  "value": "20"
+                },
+                {
+                  "key": "skip",
+                  "value": "0"
+                }
+              ]
+            },
+            "description": "Returns only active, non-deleted blogs. Optional category filter; take and skip pagination."
+          }
+        },
+        {
+          "name": "Get Active Blog by Slug",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/blogs/{{blogSlug}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "blogs",
+                "{{blogSlug}}"
+              ]
+            },
+            "description": "Returns 404 for inactive or deleted blogs."
           }
         }
       ]

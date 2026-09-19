@@ -12,6 +12,7 @@ export const UPLOAD_PURPOSES = [
   'lead-document',
   'resume',
   'service-listing',
+  'blog-image',
   'other',
 ];
 

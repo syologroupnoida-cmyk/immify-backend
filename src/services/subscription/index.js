@@ -211,7 +211,14 @@ export const createListing = async ({ vendorUserId, payload, draft = true }) => 
     ...(!draft && { submittedAt: new Date() }),
   });
 };
-export const listMyListings = (vendorUserId) => repo.listVendorListings(vendorUserId);
+const withListingNames = (listing, categoryName = listing.category?.name ?? null) => ({
+  ...listing,
+  categoryName,
+  serviceName: listing.service?.name ?? null,
+});
+
+export const listMyListings = async (vendorUserId, query) =>
+  (await repo.listVendorListings(vendorUserId, query)).map(withListingNames);
 export const getMyListing = async ({ vendorUserId, id }) => {
   const listing = await repo.findVendorListing(id, vendorUserId);
   if (!listing) throw ApiError.notFound('Service listing not found.');
@@ -241,7 +248,10 @@ export const submitListingForReview = async ({ vendorUserId, id }) => {
   });
 };
 
-export const listListingsForReview = (query) => repo.listListingsForReview(query);
+export const listListingsForReview = async (query) => {
+  const result = await repo.listListingsForReview(query);
+  return { ...result, items: result.items.map(withListingNames) };
+};
 export const approveListing = async ({ adminId, id }) => {
   const listing = await repo.findListingById(id);
   if (!listing) throw ApiError.notFound('Service listing not found.');
@@ -261,18 +271,30 @@ export const rejectListing = async ({ adminId, id, reason }) => {
     rejectionReason: reason, isPublished: false, isVisible: false,
   });
 };
-export const listPublicListings = async () => {
-  const listings = await repo.listPublicListings();
+export const listPublicListings = async (query) => {
+  const listings = await repo.listPublicListings(query);
   return listings
     .filter((listing) => listing.vendor.subscriptions.some((sub) => sub.categories.some((item) => item.categoryId === listing.categoryId)))
-    .map(({ vendor, ...listing }) => ({ ...listing, vendor: vendor.user }));
+    .map(toPublicListing);
 };
+
+const toPublicListing = (listing, category = listing.category) => ({
+  id: listing.id,
+  categoryName: category.name,
+  serviceName: listing.service?.name ?? null,
+  title: listing.title,
+  description: listing.description,
+  imageUrl: listing.imageUrl,
+  priceInPaise: listing.priceInPaise,
+  currency: listing.currency,
+  vendor: listing.vendor.user,
+});
 
 export const listPublicListingsByCategory = async (categoryId) => {
   const result = await repo.listPublicListingsByCategory(categoryId);
   if (!result.category) throw ApiError.notFound('Active service category not found.');
   return {
     category: result.category,
-    services: result.listings.map(({ vendor, ...listing }) => ({ ...listing, vendor: vendor.user })),
+    services: result.listings.map((listing) => toPublicListing(listing, result.category)),
   };
 };

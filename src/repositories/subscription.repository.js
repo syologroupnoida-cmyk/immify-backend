@@ -141,12 +141,28 @@ export const countSubscriptionJobPosts = (subscriptionId) => prisma.jobListing.c
   where: { subscriptionId, reviewStatus: { in: ['PENDING_REVIEW', 'APPROVED'] } },
 });
 export const createListing = (data) => prisma.vendorServiceListing.create({ data, include: { category: true, service: true } });
-export const listVendorListings = (vendorUserId) => prisma.vendorServiceListing.findMany({ where: { vendorUserId }, include: { category: true, service: true }, orderBy: { createdAt: 'desc' } });
+const listingFilters = ({ categoryId, categoryName, serviceId, serviceName, search }) => ({
+  ...(categoryId && { categoryId }),
+  ...(categoryName && { category: { name: { contains: categoryName, mode: 'insensitive' } } }),
+  ...(serviceId && { serviceId }),
+  ...(serviceName && { service: { name: { contains: serviceName, mode: 'insensitive' } } }),
+  ...(search && { OR: [
+    { title: { contains: search, mode: 'insensitive' } },
+    { description: { contains: search, mode: 'insensitive' } },
+    { service: { name: { contains: search, mode: 'insensitive' } } },
+  ] }),
+});
+
+export const listVendorListings = (vendorUserId, query = {}) => prisma.vendorServiceListing.findMany({
+  where: { vendorUserId, ...listingFilters(query), ...(query.status && { reviewStatus: query.status }) },
+  include: { category: true, service: true },
+  orderBy: { createdAt: 'desc' },
+});
 export const findVendorListing = (id, vendorUserId) => prisma.vendorServiceListing.findFirst({ where: { id, vendorUserId }, include: { category: true, service: true } });
 export const findListingById = (id) => prisma.vendorServiceListing.findUnique({ where: { id }, include: { category: true, service: true } });
 export const updateListing = (id, data) => prisma.vendorServiceListing.update({ where: { id }, data, include: { category: true, service: true } });
-export const listListingsForReview = async ({ status, vendorUserId, categoryId, take, skip }) => {
-  const where = { ...(status && { reviewStatus: status }), ...(vendorUserId && { vendorUserId }), ...(categoryId && { categoryId }) };
+export const listListingsForReview = async ({ status, vendorUserId, take, skip, ...filters }) => {
+  const where = { ...(status && { reviewStatus: status }), ...(vendorUserId && { vendorUserId }), ...listingFilters(filters) };
   const [items, total] = await prisma.$transaction([
     prisma.vendorServiceListing.findMany({
       where,
@@ -157,12 +173,18 @@ export const listListingsForReview = async ({ status, vendorUserId, categoryId, 
   ]);
   return { items, total, take, skip };
 };
-export const listPublicListings = () => prisma.vendorServiceListing.findMany({
-  where: { reviewStatus: 'APPROVED', isPublished: true, isVisible: true, vendor: { user: { isActive: true }, subscriptions: { some: { status: 'ACTIVE', startsAt: { lte: new Date() }, expiresAt: { gt: new Date() } } } } },
-  include: { category: true, service: true, vendor: { select: {
+export const listPublicListings = (query = {}) => prisma.vendorServiceListing.findMany({
+  where: { ...listingFilters(query), ...(query.vendorUserId && { vendorUserId: query.vendorUserId }), reviewStatus: 'APPROVED', isPublished: true, isVisible: true, vendor: { user: { isActive: true }, subscriptions: { some: { status: 'ACTIVE', startsAt: { lte: new Date() }, expiresAt: { gt: new Date() } } } } },
+  select: {
+    id: true, categoryId: true, title: true, description: true, imageUrl: true,
+    priceInPaise: true, currency: true,
+    category: { select: { name: true } },
+    service: { select: { name: true } },
+    vendor: { select: {
     user: { select: { id: true, firstName: true, lastName: true, avatarUrl: true } },
     subscriptions: { where: { status: 'ACTIVE', startsAt: { lte: new Date() }, expiresAt: { gt: new Date() } }, select: { categories: { select: { categoryId: true } } } },
-  } } },
+    } },
+  },
   orderBy: { createdAt: 'desc' },
 });
 
@@ -191,8 +213,10 @@ export const listPublicListingsByCategory = async (categoryId) => {
           },
         },
       },
-      include: {
-        service: { select: { id: true, name: true, description: true } },
+      select: {
+        id: true, categoryId: true, title: true, description: true, imageUrl: true,
+        priceInPaise: true, currency: true,
+        service: { select: { name: true } },
         vendor: { select: { user: { select: { id: true, firstName: true, lastName: true, avatarUrl: true } } } },
       },
       orderBy: { reviewedAt: 'desc' },

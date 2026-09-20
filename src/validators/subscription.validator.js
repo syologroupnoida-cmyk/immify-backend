@@ -106,8 +106,29 @@ export const listServiceListingsForReviewSchema = z.object({
   status: z.enum(['DRAFT', 'PENDING_REVIEW', 'APPROVED', 'REJECTED']).optional(),
   vendorUserId: id.optional(),
   categoryId: id.optional(),
+  categoryName: z.string().trim().min(1).max(100).optional(),
+  serviceId: id.optional(),
+  search: z.string().trim().min(1).max(160).optional(),
   take: z.coerce.number().int().min(1).max(100).default(20),
   skip: z.coerce.number().int().min(0).default(0),
+}).strict();
+
+export const listVendorServiceListingsQuerySchema = z.object({
+  status: z.enum(['DRAFT', 'PENDING_REVIEW', 'APPROVED', 'REJECTED']).optional(),
+  categoryId: id.optional(),
+  categoryName: z.string().trim().min(1).max(100).optional(),
+  serviceId: id.optional(),
+  search: z.string().trim().min(1).max(160).optional(),
+}).strict();
+
+export const listPublicServiceListingsQuerySchema = z.object({
+  categoryId: id.optional(),
+  categoryName: z.string().trim().min(1).max(100).optional(),
+  serviceId: id.optional(),
+  serviceName: z.string().trim().min(1).max(100).optional(),
+  serviceName: z.string().trim().min(1).max(100).optional(),
+  vendorUserId: id.optional(),
+  search: z.string().trim().min(1).max(160).optional(),
 }).strict();
 
 export const rejectServiceListingSchema = z.object({

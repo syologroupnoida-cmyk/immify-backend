@@ -163,7 +163,7 @@ export const listMyListings = asyncHandler(async (req, res) =>
   ok(
     res,
     "Service listings retrieved.",
-    await service.listMyListings(req.user.id),
+    await service.listMyListings(req.user.id, req.query),
   ),
 );
 export const getMyListing = asyncHandler(async (req, res) =>
@@ -225,11 +225,11 @@ export const rejectListing = asyncHandler(async (req, res) =>
     }),
   ),
 );
-export const listPublicListings = asyncHandler(async (_req, res) =>
+export const listPublicListings = asyncHandler(async (req, res) =>
   ok(
     res,
     "Public service listings retrieved.",
-    await service.listPublicListings(),
+    await service.listPublicListings(req.query),
   ),
 );
 export const listPublicListingsByCategory = asyncHandler(async (req, res) =>

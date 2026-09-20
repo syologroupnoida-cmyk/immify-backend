@@ -82,8 +82,10 @@ New global leads are always created as `PENDING`; public callers cannot set stat
 
 | Method | Path | Auth | Notes |
 |---|---|---|---|
-| GET | `/service-listings` | Public | Only published listings backed by a currently active subscription and allowed category |
+| GET | `/service-listings?categoryId=&categoryName=&serviceId=&serviceName=&vendorUserId=&search=` | Public | Approved, published listings backed by a currently active subscription and allowed category; optional filters can be combined |
 | GET | `/service-listings/category/:categoryId` | Public | Category information with all approved vendor services under that category |
+
+Each public listing is a compact card: `id`, `categoryName`, `serviceName`, `title`, `description`, `imageUrl`, `priceInPaise`, `currency`, and public `vendor` (`id`, `firstName`, `lastName`, `avatarUrl`). Category and service IDs, review fields, and long details are omitted. `serviceName` is `null` if the vendor did not select a catalog service. `categoryName` and `serviceName` filter by case-insensitive partial name; `search` matches listing title, description, or service name. All supplied filters must match. ID filters are still accepted for clients that have those IDs.
 
 ## Public Service Categories — `/service-categories`
 
@@ -130,7 +132,7 @@ Import the supplied workbook data through pgAdmin using `docs/immigration-progra
 | GET | `/vendor/subscriptions` | Vendor subscription/payment history |
 | GET | `/vendor/subscriptions/:subscriptionId` | Vendor-owned subscription detail |
 | POST | `/vendor/service-listings?draft=true|false` | Create a subscription-gated listing. Use `draft=true` (default) to save it as a draft or `draft=false` to submit it directly for admin review. Only `categoryId` is required; service details are optional. |
-| GET | `/vendor/service-listings` | Vendor listing dashboard |
+| GET | `/vendor/service-listings?status=&categoryId=&categoryName=&serviceId=&search=` | Vendor listing dashboard; filters apply only to the signed-in vendor's listings. `status` is `DRAFT`, `PENDING_REVIEW`, `APPROVED`, or `REJECTED`. |
 | GET | `/vendor/service-listings/:listingId` | Vendor-owned service listing detail |
 | PATCH | `/vendor/service-listings/:listingId` | Update a draft/rejected listing |
 | POST | `/vendor/service-listings/:listingId/submit` | Submit a draft/rejected listing for admin review |
@@ -152,7 +154,7 @@ Service listing fields: `categoryId`, `serviceId?`, `title?`, `description?`, `i
 
 | Method | Path | Purpose |
 |---|---|---|
-| GET | `/admin/service-listings?status=PENDING_REVIEW` | Paginated review queue; also filters by vendor/category |
+| GET | `/admin/service-listings?status=PENDING_REVIEW&vendorUserId=&categoryId=&categoryName=&serviceId=&search=&take=20&skip=0` | Paginated service listing review; optional filters can be combined. `status` is `DRAFT`, `PENDING_REVIEW`, `APPROVED`, or `REJECTED`. |
 | POST | `/admin/service-listings/:listingId/approve` | Approve and publish after rechecking subscription/category/plan limit |
 | POST | `/admin/service-listings/:listingId/reject` | Reject with `{ reason }` so the vendor can edit and resubmit |
 

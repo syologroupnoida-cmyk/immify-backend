@@ -2041,11 +2041,20 @@
               ],
               "path": [
                 "service-listings"
+              ],
+              "query": [
+                { "key": "categoryId", "value": "{{serviceCategoryId}}", "disabled": true },
+                { "key": "categoryName", "value": "Immigration", "disabled": true },
+                { "key": "serviceId", "value": "{{serviceId}}", "disabled": true },
+                { "key": "serviceName", "value": "PR", "disabled": true },
+                { "key": "vendorUserId", "value": "{{vendorUserId}}", "disabled": true },
+                { "key": "search", "value": "visa", "disabled": true }
               ]
             },
             "auth": {
               "type": "noauth"
-            }
+            },
+            "description": "Returns compact public service cards: listing id, categoryName, serviceName, title, description, imageUrl, priceInPaise, currency, and public vendor profile. Enable categoryName or serviceName for case-insensitive partial-name filtering; categoryId and serviceId also remain accepted as filters. Filters can be combined."
           }
         },
         {
@@ -2463,6 +2472,11 @@
                   "key": "status",
                   "value": "PENDING_REVIEW"
                 },
+                { "key": "vendorUserId", "value": "{{vendorUserId}}", "disabled": true },
+                { "key": "categoryId", "value": "{{serviceCategoryId}}", "disabled": true },
+                { "key": "categoryName", "value": "Immigration", "disabled": true },
+                { "key": "serviceId", "value": "{{serviceId}}", "disabled": true },
+                { "key": "search", "value": "visa", "disabled": true },
                 {
                   "key": "take",
                   "value": "20"
@@ -2472,7 +2486,8 @@
                   "value": "0"
                 }
               ]
-            }
+            },
+            "description": "Lists service submissions with optional combined filters. status: DRAFT, PENDING_REVIEW, APPROVED, or REJECTED. categoryName matches part of the category name, case-insensitively. Search matches title, description, or service name. Each listing includes categoryName and serviceName resolved from its IDs. take and skip control pagination."
           }
         },
         {
@@ -2733,8 +2748,16 @@
               "path": [
                 "vendor",
                 "service-listings"
+              ],
+              "query": [
+                { "key": "status", "value": "DRAFT", "disabled": true },
+                { "key": "categoryId", "value": "{{serviceCategoryId}}", "disabled": true },
+                { "key": "categoryName", "value": "Immigration", "disabled": true },
+                { "key": "serviceId", "value": "{{serviceId}}", "disabled": true },
+                { "key": "search", "value": "visa", "disabled": true }
               ]
-            }
+            },
+            "description": "Lists only the signed-in vendor's services. Enable any filters; status: DRAFT, PENDING_REVIEW, APPROVED, or REJECTED. categoryName matches part of the category name, case-insensitively. Search matches title, description, or service name. Filters can be combined. Each listing includes categoryName and serviceName resolved from its IDs."
           }
         },
         {

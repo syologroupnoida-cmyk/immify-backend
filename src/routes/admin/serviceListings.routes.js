@@ -6,6 +6,7 @@ import * as controller from '../../controllers/subscription.controller.js';
 const router = Router();
 
 router.get('/', validateRequest(listServiceListingsForReviewSchema, 'query'), controller.listListingsForReview);
+router.get('/:listingId', controller.getAdminListing);
 router.post('/:listingId/approve', controller.approveListing);
 router.post('/:listingId/reject', validateRequest(rejectServiceListingSchema), controller.rejectListing);
 

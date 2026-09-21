@@ -1991,6 +1991,27 @@
           }
         },
         {
+          "name": "Get Public Service Listing Detail",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/service-listings/{{serviceListingId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "service-listings",
+                "{{serviceListingId}}"
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            },
+            "description": "Returns the full public detail for one approved vendor service listing. Pass the unique id returned by GET /service-listings, not the shared serviceId. Returns 404 unless the listing is approved and backed by an active vendor subscription for its category."
+          }
+        },
+        {
           "name": "List Active Subscription Plans",
           "request": {
             "method": "GET",
@@ -2488,6 +2509,25 @@
               ]
             },
             "description": "Lists service submissions with optional combined filters. status: DRAFT, PENDING_REVIEW, APPROVED, or REJECTED. categoryName matches part of the category name, case-insensitively. Search matches title, description, or service name. Each listing includes categoryName and serviceName resolved from its IDs. take and skip control pagination."
+          }
+        },
+        {
+          "name": "Get Service Listing Detail",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/service-listings/{{serviceListingId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "service-listings",
+                "{{serviceListingId}}"
+              ]
+            },
+            "description": "Returns any service listing by its unique listing id, including categoryName, serviceName, category, service, and vendor details."
           }
         },
         {
@@ -3604,114 +3644,6 @@
                 "job-applications",
                 "{{jobApplicationId}}",
                 "status"
-              ]
-            }
-          }
-        }
-      ]
-    },
-    {
-      "name": "Public - Immigration Programs",
-      "item": [
-        {
-          "name": "List Immigration Programs",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "if (pm.response.code < 300) {",
-                  "  const items = ((pm.response.json().data || {}).items || []);",
-                  "  if (items.length) pm.environment.set('immigrationProgramId', items[0].id);",
-                  "}"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "auth": {
-              "type": "noauth"
-            },
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/immigration-programs?country=Canada&take=20&skip=0",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "immigration-programs"
-              ],
-              "query": [
-                {
-                  "key": "country",
-                  "value": "Canada"
-                },
-                {
-                  "key": "category",
-                  "value": "",
-                  "disabled": true
-                },
-                {
-                  "key": "leadPriority",
-                  "value": "High",
-                  "disabled": true
-                },
-                {
-                  "key": "search",
-                  "value": "",
-                  "disabled": true
-                },
-                {
-                  "key": "take",
-                  "value": "20"
-                },
-                {
-                  "key": "skip",
-                  "value": "0"
-                }
-              ]
-            },
-            "description": "Returns active immigration programs ordered by country and program number. Saves the first result ID."
-          }
-        },
-        {
-          "name": "Get Immigration Program Filter Options",
-          "request": {
-            "auth": {
-              "type": "noauth"
-            },
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/immigration-programs/filter-options",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "immigration-programs",
-                "filter-options"
-              ]
-            }
-          }
-        },
-        {
-          "name": "Get Immigration Program Detail",
-          "request": {
-            "auth": {
-              "type": "noauth"
-            },
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/immigration-programs/{{immigrationProgramId}}",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "immigration-programs",
-                "{{immigrationProgramId}}"
               ]
             }
           }

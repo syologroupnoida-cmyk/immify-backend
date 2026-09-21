@@ -7,7 +7,6 @@ import subscriptionPlanRoutes from './subscriptionPlans.routes.js';
 import serviceListingRoutes from './serviceListings.routes.js';
 import serviceCategoryRoutes from './serviceCategories.routes.js';
 import jobListingRoutes from './jobListings.routes.js';
-import immigrationProgramRoutes from './immigrationPrograms.routes.js';
 import blogRoutes from './blogs.routes.js';
 
 const router = Router();
@@ -20,7 +19,6 @@ router.use('/subscription-plans', subscriptionPlanRoutes);
 router.use('/service-listings', serviceListingRoutes);
 router.use('/service-categories', serviceCategoryRoutes);
 router.use('/job-listings', jobListingRoutes);
-router.use('/immigration-programs', immigrationProgramRoutes);
 router.use('/blogs', blogRoutes);
 
 export default router;

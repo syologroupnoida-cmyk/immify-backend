@@ -204,6 +204,13 @@ export const listListingsForReview = asyncHandler(async (req, res) =>
     await service.listListingsForReview(req.query),
   ),
 );
+export const getAdminListing = asyncHandler(async (req, res) =>
+  ok(
+    res,
+    "Service listing retrieved.",
+    await service.getAdminListing(req.params.listingId),
+  ),
+);
 export const approveListing = asyncHandler(async (req, res) =>
   ok(
     res,
@@ -230,6 +237,13 @@ export const listPublicListings = asyncHandler(async (req, res) =>
     res,
     "Public service listings retrieved.",
     await service.listPublicListings(req.query),
+  ),
+);
+export const getPublicListing = asyncHandler(async (req, res) =>
+  ok(
+    res,
+    "Public service listing retrieved.",
+    await service.getPublicListing(req.params.listingId),
   ),
 );
 export const listPublicListingsByCategory = asyncHandler(async (req, res) =>

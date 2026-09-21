@@ -222,7 +222,7 @@ export const listMyListings = async (vendorUserId, query) =>
 export const getMyListing = async ({ vendorUserId, id }) => {
   const listing = await repo.findVendorListing(id, vendorUserId);
   if (!listing) throw ApiError.notFound('Service listing not found.');
-  return listing;
+  return withListingNames(listing);
 };
 export const updateListing = async ({ vendorUserId, id, payload }) => {
   const listing = await repo.findVendorListing(id, vendorUserId);
@@ -251,6 +251,11 @@ export const submitListingForReview = async ({ vendorUserId, id }) => {
 export const listListingsForReview = async (query) => {
   const result = await repo.listListingsForReview(query);
   return { ...result, items: result.items.map(withListingNames) };
+};
+export const getAdminListing = async (id) => {
+  const listing = await repo.findAdminListingById(id);
+  if (!listing) throw ApiError.notFound('Service listing not found.');
+  return { ...withListingNames(listing), vendor: listing.vendor.user };
 };
 export const approveListing = async ({ adminId, id }) => {
   const listing = await repo.findListingById(id);
@@ -289,6 +294,39 @@ const toPublicListing = (listing, category = listing.category) => ({
   currency: listing.currency,
   vendor: listing.vendor.user,
 });
+
+export const getPublicListing = async (id) => {
+  const listing = await repo.findPublicListingById(id);
+  const hasCategoryAccess = listing?.vendor.subscriptions.some((subscription) =>
+    subscription.categories.some((item) => item.categoryId === listing.categoryId));
+  if (!listing || !hasCategoryAccess || (listing.service && !listing.service.isActive)) {
+    throw ApiError.notFound('Public service listing not found.');
+  }
+  return {
+    id: listing.id,
+    categoryName: listing.category.name,
+    serviceName: listing.service?.name ?? null,
+    category: listing.category,
+    service: listing.service ? {
+      id: listing.service.id,
+      name: listing.service.name,
+      description: listing.service.description,
+    } : null,
+    title: listing.title,
+    description: listing.description,
+    dynamicData: listing.dynamicData,
+    includes: listing.includes,
+    chargesIncludeGst: listing.chargesIncludeGst,
+    imageUrl: listing.imageUrl,
+    overview: listing.overview,
+    process: listing.process,
+    priceInPaise: listing.priceInPaise,
+    currency: listing.currency,
+    pricingDetails: listing.pricingDetails,
+    termsAndConditions: listing.termsAndConditions,
+    vendor: listing.vendor.user,
+  };
+};
 
 export const listPublicListingsByCategory = async (categoryId) => {
   const result = await repo.listPublicListingsByCategory(categoryId);

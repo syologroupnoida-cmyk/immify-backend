@@ -8,6 +8,7 @@ import serviceListingRoutes from './serviceListings.routes.js';
 import serviceCategoryRoutes from './serviceCategories.routes.js';
 import jobListingRoutes from './jobListings.routes.js';
 import blogRoutes from './blogs.routes.js';
+import publicVendorRoutes from './vendors.routes.js';
 
 const router = Router();
 
@@ -20,5 +21,6 @@ router.use('/service-listings', serviceListingRoutes);
 router.use('/service-categories', serviceCategoryRoutes);
 router.use('/job-listings', jobListingRoutes);
 router.use('/blogs', blogRoutes);
+router.use('/vendors', publicVendorRoutes);
 
 export default router;

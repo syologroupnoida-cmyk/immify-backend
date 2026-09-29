@@ -2,7 +2,7 @@
   "info": {
     "_postman_id": "e8f2a6b4-4c1a-4e2d-9c1a-Immify00api1",
     "name": "Immify API",
-    "description": "Auth + RBAC + Vendor KYC + Service Catalog + Global Lead Marketplace backend. Import with the Immify API - Local environment. Requests auto-save tokens and entity IDs where useful.",
+    "description": "Auth + RBAC + Vendor KYC + Public Vendor Directory + Service Catalog + Global Lead Marketplace backend. Import with the Immify API - Local environment. Requests auto-save tokens and entity IDs where useful.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "auth": {
@@ -2098,6 +2098,79 @@
               "type": "noauth"
             },
             "description": "Returns category information and approved vendor-created marketplace services backed by an active subscription containing this category."
+          }
+        },
+        {
+          "name": "List Public Vendors",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code < 300) {",
+                  "  const json = pm.response.json();",
+                  "  const items = (json.data && json.data.items) || [];",
+                  "  if (items.length && items[0].id) pm.environment.set('vendorUserId', items[0].id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/vendors?take=20&skip=0",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "vendors"
+              ],
+              "query": [
+                { "key": "search", "value": "consultancy", "disabled": true },
+                { "key": "city", "value": "Delhi", "disabled": true },
+                { "key": "state", "value": "Delhi", "disabled": true },
+                { "key": "country", "value": "India", "disabled": true },
+                { "key": "categoryId", "value": "{{serviceCategoryId}}", "disabled": true },
+                { "key": "serviceId", "value": "{{serviceId}}", "disabled": true },
+                { "key": "take", "value": "20" },
+                { "key": "skip", "value": "0" }
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            },
+            "description": "Returns paginated public vendor cards. Only active, KYC-approved vendors with an active subscription and approved public services are included. The test script saves the first returned vendor id to vendorUserId."
+          }
+        },
+        {
+          "name": "Get Public Vendor Detail",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/vendors/{{vendorUserId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "vendors",
+                "{{vendorUserId}}"
+              ],
+              "query": [
+                { "key": "city", "value": "Delhi", "disabled": true },
+                { "key": "state", "value": "Delhi", "disabled": true },
+                { "key": "country", "value": "India", "disabled": true },
+                { "key": "categoryId", "value": "{{serviceCategoryId}}", "disabled": true },
+                { "key": "serviceId", "value": "{{serviceId}}", "disabled": true }
+              ]
+            },
+            "auth": {
+              "type": "noauth"
+            },
+            "description": "Returns the vendor's safe public company profile and all approved services covered by the vendor's active subscription. Run List Public Vendors first to populate vendorUserId. Private contact and KYC document fields are excluded."
           }
         }
       ]

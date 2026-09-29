@@ -88,6 +88,15 @@ New global leads are always created as `PENDING`; public callers cannot set stat
 
 Each public listing is a compact card: `id`, `categoryName`, `serviceName`, `title`, `description`, `imageUrl`, `priceInPaise`, `currency`, and public `vendor` (`id`, `firstName`, `lastName`, `avatarUrl`). Category and service IDs, review fields, and long details are omitted. `serviceName` is `null` if the vendor did not select a catalog service. `categoryName` and `serviceName` filter by case-insensitive partial name; `search` matches listing title, description, or service name. All supplied filters must match. ID filters are still accepted for clients that have those IDs.
 
+## Public Vendors — `/vendors`
+
+| Method | Path | Auth | Description |
+|---|---|---|---|
+| GET | `/vendors?search=&city=&state=&country=&categoryId=&serviceId=&take=20&skip=0` | Public | Paginated cards for active, KYC-approved vendors; filters can be combined |
+| GET | `/vendors/:vendorId?city=&state=&country=&categoryId=&serviceId=` | Public | Safe public company profile; location filters validate the vendor and category/service filters narrow returned services |
+
+The vendor ID is the `id` returned by the cards endpoint. Private contact details, documents, and KYC declarations are never returned.
+
 ## Public Service Categories — `/service-categories`
 
 | Method | Path | Auth | Notes |

@@ -25,15 +25,15 @@ const cardFor = (vendor) => {
       state: vendor.kyc?.officeState ?? null,
       country: vendor.kyc?.country ?? null,
     },
-    services: services.map((listing) => ({
-      listingId: listing.id,
-      title: listing.title,
-      categoryName: listing.category.name,
-      serviceName: listing.service?.name ?? null,
-      imageUrl: listing.imageUrl,
-      priceInPaise: listing.priceInPaise,
-      currency: listing.currency,
-    })),
+    // services: services.map((listing) => ({
+    //   listingId: listing.id,
+    //   title: listing.title,
+    //   categoryName: listing.category.name,
+    //   serviceName: listing.service?.name ?? null,
+    //   imageUrl: listing.imageUrl,
+    //   priceInPaise: listing.priceInPaise,
+    //   currency: listing.currency,
+    // })),
   };
 };
 

@@ -187,6 +187,16 @@ export const updateListing = asyncHandler(async (req, res) =>
     }),
   ),
 );
+export const deleteListing = asyncHandler(async (req, res) =>
+  ok(
+    res,
+    "Service listing deleted.",
+    await service.deleteListing({
+      vendorUserId: req.user.id,
+      id: req.params.listingId,
+    }),
+  ),
+);
 export const submitListingForReview = asyncHandler(async (req, res) =>
   ok(
     res,
@@ -230,6 +240,20 @@ export const rejectListing = asyncHandler(async (req, res) =>
       id: req.params.listingId,
       reason: req.body.reason,
     }),
+  ),
+);
+export const disableListing = asyncHandler(async (req, res) =>
+  ok(
+    res,
+    "Service listing disabled.",
+    await service.disableListing(req.params.listingId),
+  ),
+);
+export const enableListing = asyncHandler(async (req, res) =>
+  ok(
+    res,
+    "Service listing enabled and published.",
+    await service.enableListing(req.params.listingId),
   ),
 );
 export const listPublicListings = asyncHandler(async (req, res) =>

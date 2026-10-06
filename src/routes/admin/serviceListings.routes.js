@@ -9,5 +9,7 @@ router.get('/', validateRequest(listServiceListingsForReviewSchema, 'query'), co
 router.get('/:listingId', controller.getAdminListing);
 router.post('/:listingId/approve', controller.approveListing);
 router.post('/:listingId/reject', validateRequest(rejectServiceListingSchema), controller.rejectListing);
+router.post('/:listingId/disable', controller.disableListing);
+router.post('/:listingId/enable', controller.enableListing);
 
 export default router;

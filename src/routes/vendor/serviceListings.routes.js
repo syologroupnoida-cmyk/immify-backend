@@ -7,5 +7,6 @@ router.post('/', validateRequest(createServiceListingQuerySchema, 'query'), vali
 router.get('/', validateRequest(listVendorServiceListingsQuerySchema, 'query'), controller.listMyListings);
 router.get('/:listingId', controller.getMyListing);
 router.patch('/:listingId', validateRequest(updateServiceListingSchema), controller.updateListing);
+router.delete('/:listingId', controller.deleteListing);
 router.post('/:listingId/submit', controller.submitListingForReview);
 export default router;

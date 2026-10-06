@@ -235,6 +235,15 @@ export const updateListing = async ({ vendorUserId, id, payload }) => {
   }
   return repo.updateListing(id, { ...payload, reviewStatus: 'DRAFT', rejectionReason: null, reviewedAt: null, reviewedByAdminId: null });
 };
+export const deleteListing = async ({ vendorUserId, id }) => {
+  const listing = await repo.findVendorListing(id, vendorUserId);
+  if (!listing) throw ApiError.notFound('Service listing not found.');
+  if (!['DRAFT', 'REJECTED'].includes(listing.reviewStatus)) {
+    throw ApiError.conflict('Only draft or rejected service listings can be deleted.');
+  }
+  await repo.deleteListing(id);
+  return { id };
+};
 export const submitListingForReview = async ({ vendorUserId, id }) => {
   const listing = await repo.findVendorListing(id, vendorUserId);
   if (!listing) throw ApiError.notFound('Service listing not found.');
@@ -270,11 +279,40 @@ export const approveListing = async ({ adminId, id }) => {
 export const rejectListing = async ({ adminId, id, reason }) => {
   const listing = await repo.findListingById(id);
   if (!listing) throw ApiError.notFound('Service listing not found.');
-  if (listing.reviewStatus !== 'PENDING_REVIEW') throw ApiError.conflict('Only pending service listings can be rejected.');
+  if (!['PENDING_REVIEW', 'APPROVED'].includes(listing.reviewStatus)) {
+    throw ApiError.conflict('Only pending or approved service listings can be rejected.');
+  }
   return repo.updateListing(id, {
     reviewStatus: 'REJECTED', reviewedAt: new Date(), reviewedByAdminId: adminId,
     rejectionReason: reason, isPublished: false, isVisible: false,
   });
+};
+export const disableListing = async (id) => {
+  const listing = await repo.findListingById(id);
+  if (!listing) throw ApiError.notFound('Service listing not found.');
+  if (listing.reviewStatus !== 'APPROVED') {
+    throw ApiError.conflict('Only approved service listings can be disabled.');
+  }
+  if (!listing.isPublished && !listing.isVisible) {
+    throw ApiError.conflict('Service listing is already disabled.');
+  }
+  return repo.updateListing(id, { isPublished: false, isVisible: false });
+};
+export const enableListing = async (id) => {
+  const listing = await repo.findListingById(id);
+  if (!listing) throw ApiError.notFound('Service listing not found.');
+  if (listing.reviewStatus !== 'APPROVED') {
+    throw ApiError.conflict('Only approved service listings can be enabled.');
+  }
+  if (listing.isPublished && listing.isVisible) {
+    throw ApiError.conflict('Service listing is already enabled.');
+  }
+  await requireEntitlement({
+    vendorUserId: listing.vendorUserId,
+    categoryId: listing.categoryId,
+    requireSlot: true,
+  });
+  return repo.updateListing(id, { isPublished: true, isVisible: true });
 };
 export const listPublicListings = async (query) => {
   const listings = await repo.listPublicListings(query);

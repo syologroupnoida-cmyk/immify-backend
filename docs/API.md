@@ -133,6 +133,7 @@ The vendor ID is the `id` returned by the cards endpoint. Private contact detail
 | GET | `/vendor/service-listings?status=&categoryId=&categoryName=&serviceId=&search=` | Vendor listing dashboard; filters apply only to the signed-in vendor's listings. `status` is `DRAFT`, `PENDING_REVIEW`, `APPROVED`, or `REJECTED`. |
 | GET | `/vendor/service-listings/:listingId` | Vendor-owned service listing detail using the unique listing `id`; includes category and service names |
 | PATCH | `/vendor/service-listings/:listingId` | Update a draft/rejected listing |
+| DELETE | `/vendor/service-listings/:listingId` | Delete a vendor-owned draft/rejected listing |
 | POST | `/vendor/service-listings/:listingId/submit` | Submit a draft/rejected listing for admin review |
 | POST | `/vendor/job-listings` | Create a job draft; requires an active subscription with job portal access |
 | GET | `/vendor/job-listings` | Vendor-owned job dashboard; query `reviewStatus?, take?, skip?` |
@@ -155,7 +156,9 @@ Service listing fields: `categoryId`, `serviceId?`, `title?`, `description?`, `i
 | GET | `/admin/service-listings?status=PENDING_REVIEW&vendorUserId=&categoryId=&categoryName=&serviceId=&search=&take=20&skip=0` | Paginated service listing review; optional filters can be combined. `status` is `DRAFT`, `PENDING_REVIEW`, `APPROVED`, or `REJECTED`. |
 | GET | `/admin/service-listings/:listingId` | Full detail for any service listing using its unique listing `id` |
 | POST | `/admin/service-listings/:listingId/approve` | Approve and publish after rechecking subscription/category/plan limit |
-| POST | `/admin/service-listings/:listingId/reject` | Reject with `{ reason }` so the vendor can edit and resubmit |
+| POST | `/admin/service-listings/:listingId/reject` | Reject a pending or approved listing with `{ reason }`; unpublishes it so the vendor can edit and resubmit |
+| POST | `/admin/service-listings/:listingId/disable` | Temporarily unpublish an approved listing while keeping its approved review status |
+| POST | `/admin/service-listings/:listingId/enable` | Republish a disabled approved listing after rechecking subscription entitlements and package limits |
 
 ### Job listings
 

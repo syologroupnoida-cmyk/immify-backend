@@ -169,6 +169,7 @@ export const findAdminListingById = (id) => prisma.vendorServiceListing.findUniq
   },
 });
 export const updateListing = (id, data) => prisma.vendorServiceListing.update({ where: { id }, data, include: { category: true, service: true } });
+export const deleteListing = (id) => prisma.vendorServiceListing.delete({ where: { id } });
 export const listListingsForReview = async ({ status, vendorUserId, take, skip, ...filters }) => {
   const where = { ...(status && { reviewStatus: status }), ...(vendorUserId && { vendorUserId }), ...listingFilters(filters) };
   const [items, total] = await prisma.$transaction([
@@ -182,7 +183,7 @@ export const listListingsForReview = async ({ status, vendorUserId, take, skip, 
   return { items, total, take, skip };
 };
 export const listPublicListings = (query = {}) => prisma.vendorServiceListing.findMany({
-  where: { ...listingFilters(query), ...(query.vendorUserId && { vendorUserId: query.vendorUserId }), reviewStatus: 'APPROVED', vendor: { user: { isActive: true }, subscriptions: { some: { status: 'ACTIVE', startsAt: { lte: new Date() }, expiresAt: { gt: new Date() } } } } },
+  where: { ...listingFilters(query), ...(query.vendorUserId && { vendorUserId: query.vendorUserId }), reviewStatus: 'APPROVED', isPublished: true, isVisible: true, vendor: { user: { isActive: true }, subscriptions: { some: { status: 'ACTIVE', startsAt: { lte: new Date() }, expiresAt: { gt: new Date() } } } } },
   select: {
     id: true, categoryId: true, title: true, description: true, imageUrl: true,
     priceInPaise: true, currency: true,
@@ -200,6 +201,8 @@ export const findPublicListingById = (id) => prisma.vendorServiceListing.findFir
   where: {
     id,
     reviewStatus: 'APPROVED',
+    isPublished: true,
+    isVisible: true,
     category: { isActive: true },
     vendor: {
       user: { isActive: true },
@@ -232,6 +235,8 @@ export const listPublicListingsByCategory = async (categoryId) => {
       where: {
         categoryId,
         reviewStatus: 'APPROVED',
+        isPublished: true,
+        isVisible: true,
         vendor: {
           user: { isActive: true },
           subscriptions: {

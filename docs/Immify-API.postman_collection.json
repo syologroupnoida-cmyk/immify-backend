@@ -1324,7 +1324,48 @@
                 "{{leadId}}",
                 "reject"
               ]
-            }
+            },
+            "description": "Rejects a pending or approved listing, unpublishes it, and returns it to the vendor for editing and resubmission."
+          }
+        },
+        {
+          "name": "Disable Approved Service Listing",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/service-listings/{{serviceListingId}}/disable",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "service-listings",
+                "{{serviceListingId}}",
+                "disable"
+              ]
+            },
+            "description": "Temporarily unpublishes an approved listing without changing its approved review status."
+          }
+        },
+        {
+          "name": "Enable Approved Service Listing",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/admin/service-listings/{{serviceListingId}}/enable",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "service-listings",
+                "{{serviceListingId}}",
+                "enable"
+              ]
+            },
+            "description": "Republishes a disabled approved listing after rechecking the vendor's subscription, category entitlement, and package limit."
           }
         }
       ]
@@ -2922,6 +2963,28 @@
         },
         {
           "name": "Submit Service Listing for Admin Review",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Draft was submitted successfully', function () {",
+                  "  pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+                  "});",
+                  "if (pm.response.code < 300) {",
+                  "  const body = pm.response.json();",
+                  "  pm.test('Listing is pending admin review', function () {",
+                  "    pm.expect(body.data).to.be.an('object');",
+                  "    pm.expect(body.data.reviewStatus).to.eql('PENDING_REVIEW');",
+                  "    pm.expect(body.data.isPublished).to.eql(false);",
+                  "    pm.expect(body.data.isVisible).to.eql(false);",
+                  "  });",
+                  "}"
+                ]
+              }
+            }
+          ],
           "request": {
             "method": "POST",
             "header": [],
@@ -2937,7 +3000,43 @@
                 "submit"
               ]
             },
-            "description": "Moves a DRAFT or REJECTED listing to PENDING_REVIEW. The vendor must have an active subscription containing the listing category."
+            "description": "Run Create Service Listing Draft first so serviceListingId is saved, then run this request. Moves a DRAFT or REJECTED listing to PENDING_REVIEW. No request body is required. The vendor must have an active subscription containing the listing category. Tests verify that the listing is pending review and remains unpublished until an admin approves it."
+          }
+        },
+        {
+          "name": "Delete Draft or Rejected Service Listing",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Service listing was deleted successfully', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "if (pm.response.code === 200) {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.data.id).to.eql(pm.environment.get('serviceListingId'));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/vendor/service-listings/{{serviceListingId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "vendor",
+                "service-listings",
+                "{{serviceListingId}}"
+              ]
+            },
+            "description": "Deletes a service listing owned by the authenticated vendor. Only DRAFT or REJECTED listings can be deleted. Create a new draft before running this request; PENDING_REVIEW or APPROVED listings return 409."
           }
         }
       ]

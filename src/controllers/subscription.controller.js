@@ -207,6 +207,16 @@ export const submitListingForReview = asyncHandler(async (req, res) =>
     }),
   ),
 );
+export const withdrawListingFromReview = asyncHandler(async (req, res) =>
+  ok(
+    res,
+    "Service listing withdrawn from admin review and returned to draft.",
+    await service.withdrawListingFromReview({
+      vendorUserId: req.user.id,
+      id: req.params.listingId,
+    }),
+  ),
+);
 export const listListingsForReview = asyncHandler(async (req, res) =>
   ok(
     res,

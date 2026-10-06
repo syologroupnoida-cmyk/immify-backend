@@ -227,13 +227,22 @@ export const getMyListing = async ({ vendorUserId, id }) => {
 export const updateListing = async ({ vendorUserId, id, payload }) => {
   const listing = await repo.findVendorListing(id, vendorUserId);
   if (!listing) throw ApiError.notFound('Service listing not found.');
-  if (!['DRAFT', 'REJECTED'].includes(listing.reviewStatus)) {
-    throw ApiError.conflict('Only draft or rejected service listings can be edited.');
+  if (!['DRAFT', 'REJECTED', 'PENDING_REVIEW'].includes(listing.reviewStatus)) {
+    throw ApiError.conflict('Approved service listings cannot be edited.');
   }
   if (payload.serviceId && !(await repo.findCatalogService(payload.serviceId, listing.categoryId))) {
     throw ApiError.badRequest('The selected service does not belong to the listing category.');
   }
-  return repo.updateListing(id, { ...payload, reviewStatus: 'DRAFT', rejectionReason: null, reviewedAt: null, reviewedByAdminId: null });
+  return repo.updateListing(id, {
+    ...payload,
+    reviewStatus: 'DRAFT',
+    submittedAt: null,
+    rejectionReason: null,
+    reviewedAt: null,
+    reviewedByAdminId: null,
+    isPublished: false,
+    isVisible: false,
+  });
 };
 export const deleteListing = async ({ vendorUserId, id }) => {
   const listing = await repo.findVendorListing(id, vendorUserId);
@@ -253,6 +262,17 @@ export const submitListingForReview = async ({ vendorUserId, id }) => {
   await requireEntitlement({ vendorUserId, categoryId: listing.categoryId });
   return repo.updateListing(id, {
     reviewStatus: 'PENDING_REVIEW', submittedAt: new Date(), rejectionReason: null,
+    reviewedAt: null, reviewedByAdminId: null, isPublished: false, isVisible: false,
+  });
+};
+export const withdrawListingFromReview = async ({ vendorUserId, id }) => {
+  const listing = await repo.findVendorListing(id, vendorUserId);
+  if (!listing) throw ApiError.notFound('Service listing not found.');
+  if (listing.reviewStatus !== 'PENDING_REVIEW') {
+    throw ApiError.conflict('Only pending service listings can be withdrawn from review.');
+  }
+  return repo.updateListing(id, {
+    reviewStatus: 'DRAFT', submittedAt: null, rejectionReason: null,
     reviewedAt: null, reviewedByAdminId: null, isPublished: false, isVisible: false,
   });
 };

@@ -1,9 +1,13 @@
 import { Router } from 'express';
 import { validateRequest } from '../../middlewares/validation.middleware.js';
 import * as vendorMgmtController from '../../controllers/vendorManagement.controller.js';
-import { listVendorsQuerySchema } from '../../validators/vendorManagement.validator.js';
+import {
+  activateVendorSchema,
+  deactivateVendorSchema,
+  listVendorsQuerySchema,
+} from '../../validators/vendorManagement.validator.js';
 
-// Vendor management — READ endpoints (ADMIN + SUPER_ADMIN).
+// Vendor management endpoints (ADMIN + SUPER_ADMIN).
 // Role gate already applied at routes/admin/index.js. Mounted under /vendors.
 
 const router = Router();
@@ -17,5 +21,15 @@ router.get(
 
 // GET /api/v1/admin/vendors/:userId
 router.get('/:userId', vendorMgmtController.getVendorDetail);
+router.post(
+  '/:userId/activate',
+  validateRequest(activateVendorSchema),
+  vendorMgmtController.activateVendor,
+);
+router.post(
+  '/:userId/deactivate',
+  validateRequest(deactivateVendorSchema),
+  vendorMgmtController.deactivateVendor,
+);
 
 export default router;

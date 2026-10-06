@@ -132,9 +132,10 @@ The vendor ID is the `id` returned by the cards endpoint. Private contact detail
 | POST | `/vendor/service-listings?draft=true|false` | Create a subscription-gated listing. Use `draft=true` (default) to save it as a draft or `draft=false` to submit it directly for admin review. Only `categoryId` is required; service details are optional. |
 | GET | `/vendor/service-listings?status=&categoryId=&categoryName=&serviceId=&search=` | Vendor listing dashboard; filters apply only to the signed-in vendor's listings. `status` is `DRAFT`, `PENDING_REVIEW`, `APPROVED`, or `REJECTED`. |
 | GET | `/vendor/service-listings/:listingId` | Vendor-owned service listing detail using the unique listing `id`; includes category and service names |
-| PATCH | `/vendor/service-listings/:listingId` | Update a draft/rejected listing |
+| PATCH | `/vendor/service-listings/:listingId` | Update a draft, rejected, or pending listing. Editing a pending listing automatically returns it to draft and removes it from admin review. Approved listings cannot be edited. |
 | DELETE | `/vendor/service-listings/:listingId` | Delete a vendor-owned draft/rejected listing |
 | POST | `/vendor/service-listings/:listingId/submit` | Submit a draft/rejected listing for admin review |
+| POST | `/vendor/service-listings/:listingId/withdraw` | Withdraw a pending listing from admin review and return it to draft for editing or deletion |
 | POST | `/vendor/job-listings` | Create a job draft; requires an active subscription with job portal access |
 | GET | `/vendor/job-listings` | Vendor-owned job dashboard; query `reviewStatus?, take?, skip?` |
 | GET | `/vendor/job-listings/:jobId` | Vendor-owned job detail |
@@ -192,6 +193,8 @@ Use `docs/import-job-openings-pgadmin.sql` to import the 100-job CSV through a t
 | POST | `/admin/vendor-kyc/:userId/reject` | `{ reason }` |
 | GET | `/admin/vendors` | Query: `kycStatus?, isActive?, search?, take?/skip? or page?/size?, sortBy?(createdAt\|updatedAt\|name), order?(asc\|desc)` |
 | GET | `/admin/vendors/:userId` | — |
+| POST | `/admin/vendors/:userId/activate` | `{ reason? }`; available to ADMIN and SUPER_ADMIN |
+| POST | `/admin/vendors/:userId/deactivate` | `{ reason }` (required); available to ADMIN and SUPER_ADMIN |
 | GET | `/admin/leads` | Query: `status?, type?, categoryId?, serviceId?, take?, skip?` |
 | PATCH | `/admin/leads/:leadId/activate` | `{ creditCost, maxUnlocks, expiresAt? }`; the global lead expires automatically after `maxUnlocks` vendor purchases |
 | GET | `/admin/leads/:leadId` | — |
@@ -207,8 +210,6 @@ Use `docs/import-job-openings-pgadmin.sql` to import the 100-job CSV through a t
 |---|---|---|
 | GET | `/super-admin/ping` | — |
 | POST | `/super-admin/admins` | `{ firstName, lastName, email, phone, password }` — creates a pre-verified ADMIN account |
-| POST | `/super-admin/vendors/:userId/activate` | `{ reason? }` |
-| POST | `/super-admin/vendors/:userId/deactivate` | `{ reason }` (required) |
 | POST | `/super-admin/vendors/:userId/credits/adjust` | `{ amount, reason }`; audited positive/negative adjustment |
 | POST | `/super-admin/subscription-plans` | Create a dynamic DRAFT plan with category IDs and entitlement limits |
 | PATCH | `/super-admin/service-categories/:id` | Edit category fields, including `isActive`, and optionally create/update child services. A service with `id` is updated; one without `id` is created. |

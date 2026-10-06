@@ -27,11 +27,11 @@ src/
     admin/
       index.js                  # role gate: ADMIN + SUPER_ADMIN
       admin.routes.js           # /admin/ping, /admin/vendor-kyc/*
-      vendors.routes.js         # /admin/vendors (read-only)
+      vendors.routes.js         # /admin/vendors (list/detail/activate/deactivate)
     super-admin/
       index.js                  # role gate: SUPER_ADMIN only
       superAdmin.routes.js      # /super-admin/ping, /super-admin/admins
-      vendors.routes.js         # /super-admin/vendors/*/activate|deactivate
+      vendors.routes.js         # /super-admin/vendors/*/credits/adjust
     vendor/
       index.js                  # role gate: VENDOR only
       vendor.routes.js          # /vendor/ping, /vendor/kyc/*

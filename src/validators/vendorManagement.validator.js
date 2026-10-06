@@ -59,7 +59,7 @@ export const listVendorsQuerySchema = z
   });
 
 // ----------------------------------------------------------------------------
-//   POST /super-admin/vendors/:userId/activate
+//   POST /admin/vendors/:userId/activate
 // ----------------------------------------------------------------------------
 // Reason is optional — activation is the "good" action.
 export const activateVendorSchema = z
@@ -69,7 +69,7 @@ export const activateVendorSchema = z
   .strict();
 
 // ----------------------------------------------------------------------------
-//   POST /super-admin/vendors/:userId/deactivate
+//   POST /admin/vendors/:userId/deactivate
 // ----------------------------------------------------------------------------
 // Reason is REQUIRED — deactivation must always have a documented cause.
 export const deactivateVendorSchema = z

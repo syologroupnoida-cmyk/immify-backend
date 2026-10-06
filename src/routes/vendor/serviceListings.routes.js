@@ -9,4 +9,5 @@ router.get('/:listingId', controller.getMyListing);
 router.patch('/:listingId', validateRequest(updateServiceListingSchema), controller.updateListing);
 router.delete('/:listingId', controller.deleteListing);
 router.post('/:listingId/submit', controller.submitListingForReview);
+router.post('/:listingId/withdraw', controller.withdrawListingFromReview);
 export default router;

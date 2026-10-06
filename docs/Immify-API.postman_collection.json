@@ -1167,6 +1167,64 @@
               ]
             }
           }
+        },
+        {
+          "name": "Activate Vendor Account",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"Re-enabled after review.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/vendors/{{vendorUserId}}/activate",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "vendors",
+                "{{vendorUserId}}",
+                "activate"
+              ]
+            },
+            "description": "Activates a vendor account. Available to ADMIN and SUPER_ADMIN through the admin route."
+          }
+        },
+        {
+          "name": "Deactivate Vendor Account",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"Policy violation reported by a customer.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/vendors/{{vendorUserId}}/deactivate",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "vendors",
+                "{{vendorUserId}}",
+                "deactivate"
+              ]
+            },
+            "description": "Deactivates a vendor account and revokes its refresh tokens. A reason of at least five characters is required. Available to ADMIN and SUPER_ADMIN through the admin route."
+          }
         }
       ]
     },
@@ -1641,62 +1699,6 @@
               "path": [
                 "super-admin",
                 "admins"
-              ]
-            }
-          }
-        },
-        {
-          "name": "Activate Vendor",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"reason\": \"Re-enabled after review.\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/super-admin/vendors/{{vendorUserId}}/activate",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "super-admin",
-                "vendors",
-                "{{vendorUserId}}",
-                "activate"
-              ]
-            }
-          }
-        },
-        {
-          "name": "Deactivate Vendor",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"reason\": \"Policy violation reported by a customer.\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/super-admin/vendors/{{vendorUserId}}/deactivate",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "super-admin",
-                "vendors",
-                "{{vendorUserId}}",
-                "deactivate"
               ]
             }
           }
@@ -2935,6 +2937,28 @@
         },
         {
           "name": "Update Service Listing",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Service listing was updated successfully', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "if (pm.response.code === 200) {",
+                  "  const body = pm.response.json();",
+                  "  pm.test('Updated listing is returned to draft', function () {",
+                  "    pm.expect(body.data.reviewStatus).to.eql('DRAFT');",
+                  "    pm.expect(body.data.submittedAt).to.eql(null);",
+                  "    pm.expect(body.data.isPublished).to.eql(false);",
+                  "    pm.expect(body.data.isVisible).to.eql(false);",
+                  "  });",
+                  "}"
+                ]
+              }
+            }
+          ],
           "request": {
             "method": "PATCH",
             "header": [
@@ -2958,7 +2982,7 @@
                 "{{serviceListingId}}"
               ]
             },
-            "description": "Full update example. Remove any field you do not want to update. Send null for a nullable field when you want to clear its stored value. categoryId cannot be changed through this endpoint."
+            "description": "Updates a DRAFT, REJECTED, or PENDING_REVIEW listing. Editing a pending listing automatically changes it to DRAFT and removes it from admin review; submit it again after editing. APPROVED listings cannot be edited. Remove fields you do not want to update, send null to clear a nullable field, and note that categoryId cannot be changed."
           }
         },
         {
@@ -3001,6 +3025,48 @@
               ]
             },
             "description": "Run Create Service Listing Draft first so serviceListingId is saved, then run this request. Moves a DRAFT or REJECTED listing to PENDING_REVIEW. No request body is required. The vendor must have an active subscription containing the listing category. Tests verify that the listing is pending review and remains unpublished until an admin approves it."
+          }
+        },
+        {
+          "name": "Withdraw Service Listing from Admin Review",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Pending listing was withdrawn successfully', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "if (pm.response.code === 200) {",
+                  "  const body = pm.response.json();",
+                  "  pm.test('Listing returned to draft', function () {",
+                  "    pm.expect(body.data.reviewStatus).to.eql('DRAFT');",
+                  "    pm.expect(body.data.submittedAt).to.eql(null);",
+                  "    pm.expect(body.data.isPublished).to.eql(false);",
+                  "    pm.expect(body.data.isVisible).to.eql(false);",
+                  "  });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/vendor/service-listings/{{serviceListingId}}/withdraw",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "vendor",
+                "service-listings",
+                "{{serviceListingId}}",
+                "withdraw"
+              ]
+            },
+            "description": "Run Submit Service Listing for Admin Review first. Withdraws a PENDING_REVIEW listing and returns it to DRAFT so the vendor can edit or delete it. No request body is required."
           }
         },
         {

@@ -2,10 +2,8 @@
 //   Vendor Management — admin/super-admin operations on vendor accounts
 // =============================================================================
 //
-// Two distinct surfaces:
-//   • Read endpoints (list + detail) — accessible to ADMIN + SUPER_ADMIN.
-//   • Write endpoints (activate / deactivate) — accessible to SUPER_ADMIN only.
-//     Role gating happens at the route folder level.
+// List, detail, activate, and deactivate operations are accessible to ADMIN
+// and SUPER_ADMIN through the /admin route role gate.
 //
 // All actions log who performed them (adminId from req.user.id) so the trail
 // is queryable via server logs (Phase 1 audit).
@@ -108,7 +106,7 @@ export const getVendorDetail = async (vendorUserId) => {
 };
 
 // -----------------------------------------------------------------------------
-//   WRITE (SUPER_ADMIN only — role gate enforced at routes/super-admin/index.js)
+//   WRITE (ADMIN + SUPER_ADMIN — role gate enforced at routes/admin/index.js)
 // -----------------------------------------------------------------------------
 
 export const activateVendor = async ({ vendorUserId, adminId, reason }) => {
